@@ -1,0 +1,130 @@
+import java.lang.reflect.Method
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply from :rootProject.getRootDir().getAbsolutePath()+"/framework_common_config.gradle"
+
+android {
+    compileSdkVersion 23
+//    buildToolsVersion "23.0.3"
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 23
+        versionCode 1
+        versionName "G2_LTSV2.0.001.002.1702081157"
+        buildConfigField "String", "BUILD_TIMESTAMP", "\"" + getDate() + "\""
+        buildConfigField "String", "USER_NAME", "\"" + System.getProperty("user.name")  + "\""
+        buildConfigField "String", "DEV_NAME", "\"" + System.getenv("COMPUTERNAME")  + "\""
+
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        debug{
+
+        }
+        sprd{
+
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'build/generated/source/proto/release/java/'
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    packagingOptions {
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+}
+
+String getDate(){
+    Date date = new Date()
+    return date.format("yyyy-MM-dd hh:mm:ss", TimeZone.getTimeZone("UTC"))
+}
+
+
+task generateWireSources(type: Exec) {
+    workingDir "."
+    commandLine "java","-jar","-Dfile.encoding=UTF-8","wire-compiler-2.2.0-jar-with-dependencies.jar","--proto_path=src/main/proto","--java_out=build/generated/source/proto/debug/java/"
+    commandLine "java","-jar","-Dfile.encoding=UTF-8","wire-compiler-2.2.0-jar-with-dependencies.jar","--proto_path=src/main/proto","--java_out=build/generated/source/proto/release/java/"
+}
+
+def String androidJarPath
+
+afterEvaluate {
+    /* Adjust Mockable Android task  */
+    tasks.matching { it.name.startsWith('mockableAndroidJar') }.each { mock ->
+        Class clz = mock.class
+        println(clz.canonicalName)
+        Method m = clz.getMethod("getAndroidJar",null)
+
+        def File androidJarFile = m.invoke(mock,null)
+        androidJarPath = androidJarFile.parentFile.canonicalPath
+        println("afterEvaluate $androidJarPath")
+        ///* Create a copy of original mockable Jar */
+
+        task restoreOriginAndroidJar(type: Copy) {
+            println("restoreOrigin to $androidJarPath")
+            from "${project.rootDir}/jarhack/android-origin.jar"
+            into androidJarPath
+            rename 'android-origin.jar', 'android.jar'
+        }
+
+        mock.dependsOn restoreOriginAndroidJar
+    }
+
+
+    tasks.matching { it.name.startsWith('preDebugBuild') }.each { mock ->
+        println("preDebugBuild $androidJarPath")
+        task restorePatchedAndroidJar(type: Copy){
+            println("restorePatchedAndroidJar to $androidJarPath")
+            from "${project.rootDir}/jarhack/android-patched.jar"
+            into androidJarPath
+            rename 'android-patched.jar', 'android.jar'
+        }
+
+        mock.dependsOn restorePatchedAndroidJar
+    }
+
+}
+
+//编译预处理，生成wire proto java源文件
+preBuild.dependsOn generateWireSources
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+    androidTestCompile 'com.android.support:support-annotations:24.0.0'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    //    compile fileTree(include: ['*.jar'], dir: 'libs')
+    //    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-runtime:$kotlin_version"
+    provided files('libs/qcrilhook.jar')
+    provided files('framework.jar')
+    compile 'com.google.guava:guava:18.0'
+    //compile 'com.zhy:okhttputils:2.0.0'
+    // 新依赖需共用的添加至project/framework_common_config.gradle
+}

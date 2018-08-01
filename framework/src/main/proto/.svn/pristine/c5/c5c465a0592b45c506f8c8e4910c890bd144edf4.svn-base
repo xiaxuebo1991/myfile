@@ -1,0 +1,874 @@
+//  终端与服务器之间的交互协议
+//  time: 2016-05-11
+syntax = "proto2";
+
+import "common.proto";
+
+enum AppCmd{
+	//登录
+	CMD_LOGIN_REQ = 1;
+	CMD_LOGIN_RESP = 2; 
+	CMD_LOGOUT_REQ = 3; 
+	CMD_LOGOUT_RESP = 4; 
+	CMD_SERVICELIST_REQ = 5;
+	CMD_SERVICELIST_RESP = 6 ;
+	CMD_SESSION_OUT = 7;
+	CMD_HEART_BEAT =8;
+	CMD_HEART_BEAT_RESP =9;
+	//分卡
+	CMD_DSIPACTH_VSIM_REQ = 10;
+	CMD_DISPACTH_VISM_RESP = 11;
+	CMD_SWITCH_VSIM_REQ = 12;
+	CMD_SWITCH_VISM_RESP = 13;
+	//计费
+	CMD_UF_REQ= 14;
+	CMD_UF_RESP= 15;
+	CMD_UF_SUPPLEMENT_REQ= 16;
+	CMD_UF_SUPPLEMENT_RESP= 17;
+	//BAM 相关
+	CMD_APDU_REQ= 18;
+	CMD_APDU_RESP= 19;
+	CMD_VISM_INFO_REQ = 20;
+	CMD_VISM_INFO_RESP = 21;
+	CMD_BIN_FILE_REQ = 22;
+	CMD_BIN_FILE_RESP = 23;
+	
+	CMD_RESET_VSIM_REQ = 24;
+	CMD_RESET_VSIM_RESP = 25;
+	CMD_SPEED_DETECTION_REQ = 26;
+	CMD_SPEED_DETECTION_RESP = 27;
+	CMD_S2C_REQ = 28;
+	CMD_S2C_RESP = 29;
+	CMD_REPORT_SEARCH_NET_RESULT = 30;	//终端上报搜网结果
+	CMD_REPORT_SEARCH_NET_RESULT_RESP = 31;
+	CMD_UPLOAD_BASIC_INFO = 32;	//上传终端基本信息
+	CMD_UPLOAD_BASIC_INFO_RESP = 33;
+	CMD_UPLOAD_CURRENT_SPEED = 34;//上报限速结果 
+	CMD_UPLOAD_CURRENT_SPEED_RESP = 35;
+	
+	CMD_PERFORMANCE_LOG_REPORT = 36;//性能日志
+	CMD_PERFORMANCE_LOG_REPORT_RESP = 37;
+	CMD_UPLOAD_SPEED_DETECTION_RESULT = 38;//上报测速结果
+	CMD_UPLOAD_SPEED_DETECTION_RESULT_RESP = 39;
+	CMD_UPLOAD_SESSIONID_REQ = 40;//上报SESSIONID
+	CMD_UPLOAD_SESSION_RESP = 41;//上报SESSIONID响应
+	CMD_QXDM_CFG_INFO = 42;//上传QXDM配置信息
+	CMD_UPLOAD_NETWORK_STATE = 43;
+	CMD_UPLOAD_NETWORK_STATE_RESP = 44;
+	CMD_TER_SLEEP_NOTICE_REQ = 45;
+	CMD_TER_SLEEP_NOTICE_RESP = 46;
+	CMD_QUERY_USER_ACOUNT_REQ = 47;
+	CMD_QUERY_USER_ACOUNT_RESP = 48;
+	CMD_SYSTEM_CONFIG_DATA_REQ = 49;
+	CMD_SYSTEM_CONFIG_DATA_RESP = 50;
+	CMD_UPLOAD_GPS_CFG = 51;
+
+	CMD_FLOW_AUTH_REQ = 52; //流量授权请求
+	CMD_FLOW_AUTH_RESP = 53;  //流量授权响应
+
+
+	CMD_RTU_SEND_SMS_RESULT_REPORT = 54;//上报发短信结果
+
+
+	CMD_RTU_PHOEN_CALL_RESULT_REPORT = 55;//上报打电话结果
+
+	CMD_RTU_SEND_SMS_UNSOLI = 56;//终端接收短信上报
+	CMD_RTU_AUTO_TEST_RESULT = 57;
+	CMD_RTU_REMOTE_AT_RESULT_REPORT = 58;//上报远程AT返回结果
+	CMD_MAX = 59;
+}
+
+
+//登陆 
+message LoginReq{
+	required uint32 loginType =1;					//0:绑定;1:用户名密码
+	required string usercode = 2; 					//用户名
+	required string password = 3; 					//密码
+	required uint64 imei = 4; 							//终端设备号
+	required uint64 seedimsi = 5;						//种子卡ICCID
+	required string seediccid = 6;					//种子卡IMSI	
+	required string deviceType = 7; 				//类型 G1 G1S G2 E1 G3
+	required string version =8; //终端软件版本
+	required string  plmn = 9; //登陆区域
+	required uint32 lac = 10;
+	required uint32 cid = 11;
+	optional uint32 devStartTime =12;//开机时间
+}
+
+message Ipv6NetAddr{
+	// uint16 addr[8];
+	repeated uint32 addr = 1;
+}
+
+
+//登陆响应 cmdCode=10001
+message LoginResp{
+	required uint32 errorCode = 1; //100 成功，其它错误码待定义
+	optional string sessionId =2;//ass返回的sessionID，后续请求都要求携带
+	optional string usercode = 3; //
+	optional string password = 4; //
+	//增加服务器时间
+	optional double serverTime = 5;
+	optional string accessToken=6; //token验证码留给设备APP
+	optional uint64 overdraftFlow = 7; // 透支流量, 单位Byte
+}
+
+//查询用户套餐余额 
+message QueryUserAcountReq{
+
+}
+
+enum userTypeAccount{
+	USER_TYPE_ACCOUNT_PERSONAL = 0;
+	USER_TYPE_ACCOUNT_AGENT_TO_PERSONAL = 1;
+	USER_TYPE_ACCOUNT_AGENT = 2;
+	USER_TYPE_ACCOUNT_RENT = 3;
+}
+
+//响应 
+message QueryUserAcountResp{
+ 	required uint32 errorCode = 1;
+	optional float amount = 2;
+	optional float rate = 3;
+	optional string mcc =4;
+	repeated AcountPackage packages=5;
+	optional bool isShow3G = 6;
+	optional userTypeAccount userType =7 ; //0：个人，1：代理转个人，2：代理购买套餐，3：租赁"
+	optional uint64 accumulatedFlow =8;//累计使用的流量(byte)
+	optional string reserved = 9;//保留字段			
+}
+
+message AcountPackage{
+	required uint64 intflowbyte = 1;//套餐初始流量
+	required uint64 surplusflowbyte = 2;//套餐可用流量
+	required uint64 activationtime =3 ;//套餐激活时间
+	required uint64 expiretime = 4;//套餐到期时间
+	required string packagename =  5;//
+	required bool isused = 6;//是否在此套餐扣费
+}
+//退出登录 cmdCode=10002
+message LogoutReq{
+	optional uint32 cause = 1;//退出原因 
+}
+
+//退出登录响应 cmdCode=10003
+message LogoutResp{
+	required uint32 errorCode  = 1;
+}
+
+//登陆成功后查询用户服务列表  cmdCode=10004
+message QueryUserParamReq{
+	optional string mcc =1;//请求国家码
+
+}
+
+//服务列表查询响应  cmdCode=10005
+message QueryUserServiceListResp{
+	 required uint32 errorCode = 1;
+	 optional string cause=2;
+	 repeated ServiceCodeValueList serCodeValueList = 3;
+}
+
+message ServiceCodeValueList{
+	optional string code = 1;
+	repeated ServiceParamValue paramValues = 2;
+}
+
+message ServiceParamValue{
+	optional string param = 1;
+	optional string value = 2;
+}
+
+
+//session过期 cmdCode = 10009
+message SessionTimeOut{
+	required uint32 errorCode = 1;
+}
+
+
+//心跳  cmdCode = 10010
+message HeartBeat{
+
+}
+
+//心跳响应 cmdCode = 10011
+message HeartBeatResp{
+}
+
+//---
+
+//-------------------------
+//message PlmnInfo {//用于分卡请求
+//	required string plmn = 1;   // PLMN（Public Land Mobile Network），公共陆地移动网络
+//	//0:CDMA;1:HDR;2:GSM;3:WCDMA;4:LTE;5:TDS
+//	optional uint32  rat  = 2;   // rat（Radio Access Type），无线接入类型 2g 3g
+//	optional uint32  rssi=  3;   // rssi信号强度
+//	optional uint32  band = 4 ;// 网络频段
+//}
+
+
+
+//Uint32 supportedRat : 定义卡支持的制式，下发格式，按位定义支持的网络制式:
+//RAT_CDMA_RADIO          --0
+//RAT_HDR_RADIO            --1
+//RAT_GSM_RADIO            --2
+//RAT_WCDMA_RADIO         --3
+//RAT_LTE_RADIO             --4
+//RAT_TDS_RADIO             --5
+//例如下发联通4g卡，可支持的网络制式为：011100；
+
+
+message EquivalentPlmnInfo {//用于分卡/换卡响应
+	required uint32	plmnType = 1;//0:hplmn;1:eplmn
+	required string	plmn = 2;   // PLMN（Public Land Mobile Network），公共陆地移动网络
+	required uint32 supportedRat = 3;//说明见上
+	optional uint32 uc_3gpp_2gband = 4 ;//增加频段信息。
+	optional uint64 uc_3gpp_3gband = 5 ;
+	optional uint64 uc_3gpp_4gband = 6 ;
+	optional uint32 uc_3gpp2_band = 7;
+}
+
+enum	ApnTypeE{
+	APN_TYPE_GSM_UMTS = 0;
+	APN_TYPE_LTE_ATTACH = 1;
+	APN_TYPE_LTE_DATA_CALL = 2;
+}
+
+message ApnInfo{
+	optional	ApnTypeE 	apnType = 1;//
+	optional	string 	apn = 2;
+	optional	string 	username = 3;
+	optional	string 	password = 4;
+	optional	uint32 	authType = 5;//鉴权类型:0:NULL;1:PAP;2:CHAP
+	optional	uint32	ipType = 6;//0:ipv4;1:ipv6;2:ipv4v6;
+	optional	uint32 	ipv4primaryDns = 7;
+	optional	uint32	ipv4secondaryDns = 8;
+	optional	Ipv6NetAddr	ipv6primaryDns = 9;
+	optional	Ipv6NetAddr	ipv6secondaryDns = 10;
+	optional    string plmn = 11;
+}
+
+
+//分卡 cmdCode=20000
+message DispatchVsimReq{
+	repeated PlmnInfo plmnList  = 1;//MCC+MNC列表分卡依据(当前采用)
+	optional uint32 lac =2 ;//位置区码//4,5调整下位置。
+	optional uint32 cellid =3; //手机信号覆盖区域的的编号
+	optional float longitude = 4;//经度
+	optional float latitude = 5;//纬度
+}
+
+//分卡响应 cmdCode=20001
+	message DispatchVsimResp{
+	required int32 errorCode = 1; //错误码  100 成功,其它错误码待定义
+	optional uint64 imsi =2; //vsim 卡号
+	//增加虚拟IMEI号字段
+	optional uint64 virtualImei =3;
+	// APN 重新定义
+	repeated ApnInfo apnInfo = 4;
+	optional uint32 vsim_roam_enable = 5;//是否允许vsim漫游，1: 允许，0：禁止
+	repeated EquivalentPlmnInfo eplmnList = 6;	//结构说明见上
+	//增加BAM APDU路由对应的IP和端口
+	optional uint32 bamRouterIpv4Addr = 7;
+	optional uint32 bamRouterIpv4Port= 8;
+	optional Ipv6NetAddr bamRouterIpv6Addr = 9;
+	optional uint32 bamRouterIpv6Port= 10;
+}
+
+//换卡请求 cmdCode=20002
+message SwitchVsimReq{
+	// 细分具体原因，带上错误码
+	required 	uint32 cause = 1;
+	optional 	uint32 subCause = 2;
+	repeated PlmnInfo plmnList  = 3;//MCC+MNC列表分卡依据(当前采用)
+	optional uint32 lac =4;//位置区码
+	optional uint32 cellid = 5; //手机信号覆盖区域的的编号
+	optional float longitude = 6;//经度
+	optional float latitude = 7;//纬度
+}
+
+//换卡请求响应 cmdCode=20003
+	message SwitchVsimResp{
+	required int32 errorCode = 1; //错误码  100 成功,其它错误码待定义
+	optional uint64 imsi =2; //vsim 卡号
+	//增加虚拟IMEI号字段
+	optional uint64 virtualImei =3;
+	// APN 重新定义
+	repeated ApnInfo apnInfo = 4;
+	optional uint32 vsim_roam_enable = 5;//是否允许vsim漫游，1:允许，0:禁止
+	repeated EquivalentPlmnInfo eplmnlist = 6;	//结构说明见上
+	//增加BAM APDU路由对应的IP和端口
+	optional uint32 bamRouterIpv4Addr = 7;
+	optional uint32 bamRouterIpv4Port= 8;
+	optional Ipv6NetAddr bamRouterIpv6Addr = 9;
+	optional uint32 bamRouterIpv6Port= 10;
+}
+
+//-----------------------------------计费-------------------------------------
+//流量上报   cmdCode=30000
+message UploadFlowsizeReq{
+	required  uint32 ufId = 1; //日志ID,GUID 全球唯一码，全局唯一
+	required  uint64 imsi = 2;
+	required  uint64 flowSizeup = 3; //上行使用的差量流量，字节为单位
+	required  uint64 flowSizedown =4 ; //下行使用的差量流量，字节为单位
+	// 增加系统业务流量区分上下行
+	required  uint64 systemFlowSizeUp = 5;
+	required  uint64 systemFlowSizeDown =6;
+	//种子卡流量分上下行，种子SIM使用的流量，字节为单位
+	optional  uint64 seedflowSizeUp = 7;
+	optional  uint64 seedflowSizeDown = 8;
+	//增加位置信息
+	required  string plmn = 9;
+	optional  uint32 lac = 10;
+	optional  uint32 cid = 11;
+	//增加位置信息，经纬度
+	optional float longitude = 12;
+	optional float latitude = 13;
+}
+
+//uf响应  cmdCode=30001
+message UploadFlowsizeResp{
+	required int32 errorCode = 1; //错误码  100 成功,其它错误码待定义
+}
+
+//流量补报 cmdCode=30002
+message SupplemenUploadFlowsize{
+	required uint64 imei = 1;
+	repeated SupplemenUf supplementUf= 2;
+}
+
+message SupplemenUf{
+	optional string sessionId = 1;
+	required string usercode = 2;
+	required uint32 logid = 3;
+	required uint64 imsi = 4;
+	required uint64 starttime = 5; 
+	required uint64 endtime = 6;  
+	required uint64 upFlow =  7; //上行流量
+	required uint64 downFlow = 8; //下行流量
+	// 增加系统业务流量，区分上下行
+	optional uint64 systemFlowSizeUp = 9;
+	optional uint64 systemFlowSizeDown = 10;
+	
+	optional string plmn = 11;
+	optional uint32 lac = 12;
+	optional uint32 cid = 13;
+	optional  float longitude = 14;
+	optional  float latitude = 15;
+
+}
+//cmdCode=30002
+message SupplemenUploadFlowsizeResp{
+	required uint32 errorCode =  1;
+}
+
+//--------------------------BAM 服务--------------------------------------
+//ADDU鉴权 cmdCode=40002
+message ApduAuth{
+	required uint64 imsi = 1;// vSim 号码
+	required bytes data = 2;//数据包
+	optional uint32 serial =3;
+	optional bytes fileID =4;
+	optional uint64 seedflowsiz = 5 ;
+}
+
+//apdu 请求响应 cmd=40003
+message ApduAuthResp{
+	required uint32 errorCode = 1;// 错误码 100 成功 ,
+	optional bytes data = 2; //返回的apdu数据包
+}
+
+
+//获取BinFile cmd=40004
+message GetVsimInfoReq{
+	required uint32 vsimsupportlist = 1;//使用方案
+}
+
+//响应  cmd=40005
+message GetVsimInfoResp{
+	required uint32 errorCode = 1;//100:成功；其他：失败
+	optional uint32 vsimscheme = 2;//使用方案
+	optional uint32 delete_flag = 3;//文件删除flag
+	optional string vsimcomversion = 4;//通用文件版本号
+	optional string vsimdiffversion = 5;//差异文件版本号
+}
+
+//getBinFile cmd=40006
+message GetBinFileReq{
+	required uint32 binfd = 1;//文件类型差异文件/通用文件
+}
+
+//getBinFile Resp  cmd=40007
+message GetBinFileResp{
+	required uint32 errorCode = 1;//100:成功；其他：失败
+	optional uint32 binfd =2 ;//请求下载文件类型
+	optional uint32 packettotal = 3;//bin文件总包数
+	optional uint32 sizetotal = 4;//bin文件总大小
+	optional uint32 packetindex = 5;//packetindex
+	optional uint32 count = 6;//当前包字节数
+	optional bytes  data = 7;//数据
+}
+
+//*******************************重置vsim请求  cmd*******************************//
+
+message Reset_VsimReq {
+	required uint64 imsi = 1;// vSim 号码
+    optional uint32 resetCause = 2;//复位原因
+}
+
+message ResetVsimResp {
+	required uint32 errorCode = 1;//100:成功；其他：失败
+}
+
+//*******************************请求检测网址  cmd*******************************//
+message SpeedDetectionUrlReq{
+	repeated PlmnInfo plmn = 1;//
+	required uint32 lac = 2;// 位置
+	required uint32 strength = 3;//信号强度
+	required uint32 scope = 4;//适用范围
+}
+
+// bitmap  
+enum speedActionTypeE{
+	SPEED_ACTION_TYPE_PING = 1;
+	SPEED_ACTION_TYPE_DNS = 2;
+	SPEED_ACTION_TYPE_HTTP = 4;
+	SPEED_ACTION_TYPE_HTTP_DOWNLOAD = 8;
+}
+
+//请求检测网址响应 cmdcode= 50009
+message SpeedDetectionUrlResp{
+	required uint32  errorCode =1 ; //100成功
+	repeated PlmnInfo plmnarray = 2; //plmn数组, 最多8个
+	optional uint32 lac = 3 ; //位置区ID
+	optional uint32 sn = 4; //url组编号
+	optional uint32 actionType = 5; //用一个字节表示：1为ping, 2为dns, 4为http 头, 8为http下载
+	repeated string urls = 6;//网址数组, 最多5个网址, 每个网址最多64个字符  
+}
+
+
+//说明 s2c 和c2s ass不用解析相应的内容，直接把数据包传递给相应的服务，相应的服务需要根据
+//TerminalProtocol_detial.proto文件解析内容
+
+//S2C命令
+message S2c_cmd_req{
+	required bytes data = 1;
+}
+
+message S2c_cmd_resp{
+	required uint32 reval_int = 1;
+}
+
+//******************************* 终端上报搜网结果*******************************//
+
+message Report_SearchNet_Result{
+	repeated PlmnInfo  plmn = 1;
+}
+
+message report_searchnet_result_resp{
+	required uint32 errorCode = 1;
+}
+
+//*******************************上传终端基本信息*******************************//
+message Upload_basic_info{
+	required uint64 imei =1;
+	required string board_soft_version =2;
+}
+
+message upload_basic_info_resp{
+	required uint32 errorCode = 1;
+}
+
+//*******************************上报限速结果  cmd*******************************//
+
+enum speed_limit_cuase{
+	SPEED_LIMIT_CAUSE_QOS_SUCC = 0;
+	SPEED_LIMIT_CAUSE_QOS_FAIL = 1;
+	SPEED_LIMIT_CAUSE_QUERY_QOS = 2;
+}
+ 
+enum speed_limit_req_from{
+	SPEED_LIMIT_REQUEST_FROM_CLIENT = 1;
+	SPEED_LIMIT_REQUEST_FROM_NETWORK = 2;
+}
+
+message Upload_Current_Speed{
+	required string flow_id = 1;
+	required speed_limit_cuase upload_cause = 2; //0: qos success, 1: qos fail, 2:query 
+	optional speed_limit_req_from qos_direct = 3;//1: by client, 2: by network
+	optional uint32 qos_ulspeed = 4; //查询的时候填，单位kbps
+	optional uint32 qos_dlspeed = 5;//查询的时候填，单位kbps
+	optional uint32 rat = 6;
+	optional uint32 cmd_source = 7;//命令源//1:OCS;2:CSS;3:OSS
+	optional uint32 priority_level = 8;//限速优先级 
+	optional uint32 if_display = 9;//是否显示限速  1显示，0不显示
+}
+
+ message upload_current_speed_resp{
+	required uint32 errorCode = 1;
+}
+//*******************************性能日志C2S_MONITOR_INFO_LOG_REPORT*******************************//
+message Performance_log_report{
+	required bytes data = 1;
+}
+ 
+ message performance_log_resp{
+	required uint32 errorCode = 1;
+}
+//*******************************上报测速结果 cmd*******************************//
+
+
+enum speedStartTypeE{
+	SPEED_START_TYPE_PDP = 0;
+	SPEED_ACTION_TYPE_POS_CHANGE = 1;
+	SPEED_ACTION_TYPE_MANUAL = 2;
+}
+
+message DetectionResult{
+	required int32 dns =1 ; // 0 为失败，1为成功，10为重新访问dns失败 // TODO 这里定义成功和失败跟http相反？
+	required int32 maxtime = 2; //ping最大时长 
+	required int32 avgtime = 3 ;//ping平均时长
+	required int32 mintime = 4;//ping最小时长
+	required int32 http = 5;//获取http头：0为成功，1为失败，10为重定向
+	required int32 downloadbyte =6; //下载字节数
+	required int32 downloadtime = 7 ;//下载时长
+}
+message Upload_Speed_Detection_Result{
+	repeated PlmnInfo plmn = 1;//3个byte表示一个plmn
+	required uint32 lac = 2;//位置
+	required uint32 strength = 3;//信号强度
+	required uint32 sn = 4; //url组编号
+	required speedStartTypeE startType =5;//0为pdp拨号触发, 1为位置变化触发, 2为手工测速上报结果
+	required uint32 actType = 6;//用一个字节表示：1为ping, 2为dns, 4为http 头, 8为http下载
+	repeated DetectionResult result = 7;//每个测速网址一个测速结果
+}
+
+message Upload_Speed_Result_Resp {
+	required uint32 errorCode = 1;
+}
+//*******************************上报SESSIONID cmd*******************************//
+
+message Upload_SessionId_Req{
+
+}
+
+message Upload_SessionId_Resp{
+	required uint32 errorCode=1;
+}
+//终端上报网络状态
+message Upload_network_state{
+	optional uint32 lac = 1; // 位置编号
+	optional uint32 cellid=2;   	// 基站编号
+	optional uint32 rssi =3;    // 信号强度
+	optional string mcc =4;  // 移动国家码
+	optional string mnc =5 ;   // 移动网络码
+	optional uint32 rat = 6;// 网络制式
+	optional uint32 rscp = 7;// 接收信号码功率
+	optional uint32 ecio = 8;// 信号接收质量
+	optional uint32 band = 9;// 网络带宽
+	optional uint32 tx =10;// 发射功率
+}
+//响应
+ message Upload_network_state_resp{
+	required uint32 errorCode = 1;
+} 
+//上传抓QXDM LOG功能配置信息
+//文件操作命令为查询时返回
+message report_qxdm_cfg_info{
+	required uint64 imei =1;
+	required uint32 board_type = 2;//0：主板;1:副板
+	required uint32 auto_switch = 3;
+	required file_opt_config_param config = 4;
+}
+
+//终端休眠通知服务器
+enum SleepNoticeCtrlE{
+	SLEEP_NOTICE_CTRL_START = 1;
+	SLEEP_NOTICE_CTRL_STOP = 2;
+}
+
+message Ter_Sleep_Notice_Req{
+	required SleepNoticeCtrlE ctrl = 1;	// 开启或者关闭休眠
+	optional uint64 vsim_imsi = 2;		// vsim卡的imsi
+	repeated PlmnInfo eplmn = 3;    	// 网络状态
+}
+
+message Ter_Sleep_Notice_Resp{
+	required uint32 errorCode = 1;  // 服务器返回错误码
+}
+
+//系统配置参数
+message System_config_data_req{
+	required string sid = 1;
+	required string cfg = 2;
+	required string did = 3;
+	required string flg = 4;
+	optional string usr = 5;
+}
+
+message Ipv4_type
+{
+	required uint32 ipv4 = 1;
+	required uint32 port = 2;
+}
+
+message Ipv6_type
+{
+	repeated uint32 ipv6 = 1;
+	required uint32 port = 2;
+}
+message Ip_type
+{
+	optional Ipv4_type Ipv4_ip = 1;
+	optional Ipv6_type Ipv6_ip = 2;
+}
+message System_config_data_rsp{
+	required uint32 errorCode = 1;  // 服务器返回错误码
+	optional uint32 type = 2;	//更新标志 0：不更新 1：更新
+	optional string version = 3;
+	optional Ip_type root_ip = 4;
+	repeated Ip_type server_ip = 5;//max 5 server ip
+}
+
+//GPS功能控制响应（查询命令）
+message Upload_gps_cfg
+{
+	optional Gps_switch_state network_gps_switch_state = 1;
+	optional Gps_switch_state hard_gps_switch_state = 2;
+}
+
+
+// 流量授权消息类型
+enum Flow_auth_req_type{
+	FLOW_AUTH_REQ_INIT = 1;  // 初始消息
+	FLOW_AUTH_REQ_UPDATE = 2; // 更新消息
+	FLOW_AUTH_REQ_TERMINAL = 3; // 终止消息
+	FLOW_AUTH_REQ_SUPPLY = 4; // 补报消息
+}
+
+// 流量授权账户信息
+message Flow_auth_user_account{
+	optional string username = 1; // 用户名
+	optional uint64 imei = 2; //种子卡imei
+}
+
+// 网络制式, 终端上报给服务器, 主板的参数, 如果主板未获取到则不填
+enum Flow_auth_rat_type{
+	FLOW_AUTH_RAT_TYPE_2G = 1;
+	FLOW_AUTH_RAT_TYPE_3G = 2;
+	FLOW_AUTH_RAT_TYPE_4G = 3;
+}
+
+// 终端gps位置, 如果未获取到, 不上报
+message Ter_gps_position{
+	required double longitude = 1; //终端接入地点的经度
+	required double latitude = 2; //终端接入地点的纬度
+}
+
+// 流量授权源, 分为用户授权和vsim卡授权
+enum Flow_auth_src{
+	FLOW_AUTH_SRC_USER = 1; // 用户授权
+	FLOW_AUTH_SRC_VSIM = 2; // 卡授权
+}
+
+// qos结果
+enum User_qos_result{
+	USER_QOS_RESULT_OK = 0; // 成功
+	USER_QOS_RESULT_FAIL = 1; // 失败
+}
+
+// 流量授权组结果
+message Flow_auth_rating_group_result{
+	required uint32 group_id = 1;  // 授权组id
+	required uint32 duration = 2;  // 授权组使用时常,单位s
+	required uint32 up_flow = 3; // 上行流量 单位 Byte
+	required uint32 down_flow = 4; // 下行流量 Byte
+	optional User_qos_result qos_result = 5; // 流控设置结果
+}
+
+// 流量授权请求
+message Flow_auth_req{
+	required uint32 sn = 1;//请求返回时候必须必须返回此sn
+	required Flow_auth_req_type req_type = 2; // 请求消息类型
+	required Flow_auth_src auth_src = 3;  // 授权来源
+	required uint32 req_id = 4;  // 请求id, 从0开始, 中与session唯一标识该授权请求
+	required int32 time_stamp = 5; // 时间戳, 1970年到当前的秒数
+
+	optional Flow_auth_user_account account = 6; // 用户信息, 用户授权时用到
+	optional uint64 imsi = 7;  // vsim卡信息, 卡授权时用到
+	optional string mcc = 8; // 国家码
+	optional string mnc = 9; // 地区码, 取主板值 主板值未取到是用副板值
+	optional Flow_auth_rat_type rat = 10; // 网络制式, 取主板网络制式, 如果主板未取到, 则不填
+	optional uint32 lac = 11; // 位置区, 
+	optional Ter_gps_position pos = 12; // 终端gps位置
+	optional User_qos_result qos_result = 13; // 限速结果
+	repeated Flow_auth_rating_group_result results = 14;  // 流量结果
+	optional string old_sessionid = 15;
+	
+}
+
+// 流量使用完成后动作
+enum Flow_useup_action{
+	FLOW_USEUP_ACTION_REFUSE = 1; // 拒绝使用
+	FLOW_USEUP_ACTION_REDIRECT = 2; // 地址重定向
+	FLOW_USEUP_ACTION_SWITCH_VSIM = 3; // 换卡 
+}
+
+// 流量使用完后处理
+message Flow_useup_info{
+	required Flow_useup_action action = 1; // 动作
+	optional uint32 addr_type = 2; // 地址类型
+	optional string addr = 3; // 地址
+}
+
+// 流量授权 qos设置
+message User_qos_set{
+	required uint32 priority = 1; // 优先级, 用户授权 卡授权 手动授权基于优先级配置
+	required uint32 rate_up = 2; // 上行速率 Bps
+	required uint32 rate_down = 3; // 下行速率 Bps
+	required bool is_display = 4; // 是否显示中UI上
+}
+
+// 用户套餐信息
+message User_aoc_info{
+	optional string name = 1; // 套餐名称
+	optional uint32 balance = 2; // 套餐余额 欧元
+	optional uint32 raltable = 3; // 套餐使用量 Byte
+	optional uint32 remnant = 4; // 套餐余量 Byte
+}
+
+// 流量授权返回码
+enum Flow_auth_ret_code{
+	FLOW_AUTH_RET_OK = 0; // 成功
+}
+
+// 流量授权组
+message Flow_auth_rating_group{
+	required uint32 group_id = 1; // 组id
+	required Flow_auth_ret_code ret = 2; // 返回码
+	required uint32 auth_flow = 3; // 授权流量
+	required uint32 threshold = 4; // 授权阈值, 比如授权50M,阈值为10M,则终端发送更新授权的时候流量使用必须中40-50M之间
+	optional uint32 valid_time = 5; // 可用时间 单位s, 从收到resp开始算, 到了时间后必须上报update或terminal消息.
+	optional Flow_useup_info useup_info = 6; // 使用完成后的动作,如果有这个消息,表明这时最后一次流量授权,使用完成后不让用户使用,或者换卡
+	optional User_aoc_info aoc = 7; // 用户套餐信息, 在UI上显示用
+	optional User_qos_set qos = 8; // 流控信息, 比外面的qos优先级低
+}
+
+message Flow_auth_resp{
+	
+	required uint32 errorCode = 1; //100 成功
+	optional uint32 sn = 2;//跟请求时候的sn必须一致
+	optional Flow_auth_ret_code ret = 3; // 授权返回值
+	optional Flow_auth_src auth_src = 4; // 授权来源
+	optional uint32 req_id = 5; // 请求id,与req消息对应
+	repeated Flow_auth_rating_group groups = 6; // 授权组, 一个或多个
+	optional User_qos_set qos = 7; // 流控信息
+}
+
+
+
+message RTU_Send_SMS_Result_Report
+{
+	required uint32 id = 1; 
+	required uint32 err_code = 2;             //错误码
+}
+
+//接收短信上报
+message RTU_Send_SMS_Unsoli
+{      
+	required string phone_num = 1;      
+	required string sms_value = 2;            //短信内容
+
+}
+
+
+
+message RTU_Phone_Call_Report 
+{
+    required uint32 err_code = 1;             //错误码
+}
+
+//自动测试结果上报
+message RTU_Auto_Test_Result
+{   
+	required uint32 ev = 1;             //状态
+	required uint32 err = 2;            //错误类型
+	required uint32 err_cause = 3;      //错误原因
+}
+//远程at返回结果
+message RTU_Remote_AT_Result
+{
+	required uint32 err_code = 1;
+	optional string at_resp = 2;
+}
+//上行命令  不区分req和resp
+message AssReq {
+	optional string sessionid = 1;
+    optional LoginReq          loginReq         = 2;
+    optional LogoutReq         logoutReq        = 3;
+	optional QueryUserParamReq queryUserParamReq =4;
+	optional UploadFlowsizeReq uploadFlowsizeReq =5;
+	optional SupplemenUploadFlowsize supplemenUploadFlowsize = 6;
+	optional DispatchVsimReq dispatchVsimReq =7;
+	optional SwitchVsimReq switchVsimReq = 8;
+	optional ApduAuth apduAuth = 9;
+	optional GetVsimInfoReq getVsimInfoReq = 10;
+	optional GetBinFileReq getBinFileReq =11;
+	optional HeartBeat heartBeat = 12;	
+	optional Reset_VsimReq resetvsimreq = 13;
+	optional SpeedDetectionUrlReq speeddetectionreq = 14;	//请求检测网址
+	optional Report_SearchNet_Result ReportSearchNetResult = 15; //终端上报搜网结果
+	optional Upload_basic_info UploadBasicInfo = 16;//上传终端基本信息
+	optional Upload_Current_Speed UploadCurrentSpeed  = 17;//上报限速结果 
+	optional Performance_log_report PerformanceLogReport = 18;//性能日志
+	optional Upload_Speed_Detection_Result UploadSpeedDetectionResult = 19;//上报测速结果
+	optional Upload_SessionId_Req UploadSessionId_Req = 20;//上报SESSIONID)
+	optional S2c_cmd_resp s2c_resp = 21;
+	optional report_qxdm_cfg_info qxdm_cfg_info = 22;
+	optional Ter_Sleep_Notice_Req TerSleepNoticeReq = 23;
+	optional Upload_network_state UploadNetworkState = 24;
+	optional QueryUserAcountReq  QueryAountReq = 25;
+	optional System_config_data_req SystemConfigDataReq = 26;
+	optional Upload_gps_cfg UploadGpsCfg = 27;
+	optional Flow_auth_req FlowAuthReq = 28; // 流量授权请求
+	optional RTU_Send_SMS_Result_Report RtuSendSMSResultReport = 29;//上报发短信结果
+	optional RTU_Phone_Call_Report RtuPhoneCallReport = 30;//上报打电话结果
+	optional RTU_Send_SMS_Unsoli RtuSendSMSUnsoli = 31;//上报接收短信
+	optional RTU_Auto_Test_Result RtuAutoTestResult = 32;//上报rtu自动测试结果
+	optional RTU_Remote_AT_Result RtuRemoteATResult = 33;//上报AT结果
+}
+//下行命令  不区分req和resp
+message AssResp {
+    optional LoginResp          loginResp         = 1;
+    optional LogoutResp         logoutResp        = 2;
+	optional QueryUserServiceListResp queryUserServiceListResp  = 3;
+	optional UploadFlowsizeResp uploadFlowsizeResp  = 4;
+	optional SupplemenUploadFlowsizeResp supplemenUploadFlowsizeResp =5;
+	optional DispatchVsimResp dispatchVsimResp =6; 
+	optional SwitchVsimResp switchVsimResp =7;
+	optional ApduAuthResp apduAuthResp =8;
+	optional GetVsimInfoResp getVsimInfoResp = 9;
+	optional GetBinFileResp getBinFileResp =10;
+	optional SessionTimeOut sessionTimeOut = 11;
+	optional HeartBeatResp heartBeatResp = 12;
+	optional ResetVsimResp resetvsimresp = 13;
+	optional SpeedDetectionUrlResp speeddetectionresp = 14;
+	optional S2c_cmd_req s2c_req = 15;
+	
+	optional Upload_SessionId_Resp UploadSessionIdResp = 16;//上报SESSIONID响应
+	optional Upload_Speed_Result_Resp UploadSpeedResultreResp = 17;
+	optional performance_log_resp PerformanceLogResp = 18;
+	optional upload_current_speed_resp UploadCurrentSpeedResp = 19;
+	optional report_searchnet_result_resp ReportSearchResultResp = 20;
+	optional upload_basic_info_resp UploadBasicInfoResp = 21;
+	optional Ter_Sleep_Notice_Resp TerSleepNoticeResp = 22;
+	optional Upload_network_state_resp UploadNetworkStateResp = 23;
+	optional QueryUserAcountResp QueryAcountResp = 24;
+	optional System_config_data_rsp SystemConfigRsp = 25;
+	optional Flow_auth_resp FlowAuthResp = 26; // 流量授权响应
+}
+
+
+
+
+

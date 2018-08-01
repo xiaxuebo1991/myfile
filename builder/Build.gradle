@@ -1,0 +1,135 @@
+def String framework = "framework"
+def String safety4fw = 'safety4fw'
+def String ucapp = 'ucapp'
+def String uservice = 'uservice'
+def String fwJarOutputPath = "${project.rootDir}/${framework}/build/outputs/jar"
+def String fwJarPathTo = "/provided_libs"
+def String fwJarOutputName = "framework-release-${FwJarVersion}.jar"
+
+def String assetsPath = "/src/main/assets"
+def String dexName = "framework-release-${FwJarVersion}-jar2dex.dex"
+def String uc_asset0_bin = "uc-asset0.bin"
+
+//配置加固版本默认版本信息 
+def Integer version_Code = 200
+def String version_Name = "GC01_TSV2.1.004.002.180126"
+
+task deleteAll(type: Delete) << {
+    
+    delete "${project.rootDir}/${framework}/${uc_asset0_bin}"
+    delete "${project.rootDir}/${framework}/${dexName}"
+    delete "${project.rootDir}/${framework}${assetsPath}/${uc_asset0_bin}"
+    delete "${project.rootDir}/${safety4fw}${assetsPath}/${uc_asset0_bin}"
+
+    delete "${fwJarOutputPath}"
+    delete "${project.rootDir}/${framework}/gen_jiagu_bin/${fwJarOutputName}"
+    delete "${project.rootDir}/${safety4fw}${fwJarPathTo}"
+    delete "${project.rootDir}/${ucapp}${fwJarPathTo}"
+    delete "${project.rootDir}/${uservice}${fwJarPathTo}"
+}
+
+task runBuild(dependsOn: ['deleteAll']) {
+   println("$RELEASE_VERSION_CODE     $RELEASE_VERSION_NAME")
+    
+
+    
+    exec {
+        Integer versionCode = "unset" == RELEASE_VERSION_CODE ? version_Code : Integer.parseInt(RELEASE_VERSION_CODE)
+        
+        String versionName = "unset" == RELEASE_VERSION_NAME ? version_Name : RELEASE_VERSION_NAME
+        println("versionCode $versionCode     versionName $versionName")
+        
+        workingDir "."
+        commandLine "${project.rootDir}/builder/AutoBuildRelease.bat","$versionCode","$versionName"
+    }
+}
+
+task copyExternalSources(/*dependsOn: ['runBuild']*/) << {
+    copy {
+        from "${project.rootDir}/${framework}/build/generated/source/proto/debug/java"
+        into "${project.rootDir}/${framework}/build/intermediates/classes/debug"
+    }
+    copy {
+        from "${project.rootDir}/${framework}/build/generated/source/proto/release/java"
+        into "${project.rootDir}/${framework}/build/intermediates/classes/release"
+    }
+}
+
+task buildFrameworkJar(type: Jar, dependsOn: ['copyExternalSources']) {
+
+    //导出的jar文件名称
+    archiveName = "${fwJarOutputName}"
+    //从哪个目录打包jar
+    String path = "${project.rootDir}/${framework}/build/intermediates/classes/release"
+
+    if (file("${path}").exists()) {
+        from("${project.rootDir}/${framework}/build/intermediates/classes/release")
+    }
+
+    //导出的jar文件的存放目录（未指定则默认存放在build/libs下）
+    destinationDir = file("${fwJarOutputPath}")
+    //去掉不要的类
+    //exclude('com/a/b/BuildConfig.class')
+    exclude('**/BuildConfig.class')
+    // exclude('com/a/b/BuildConfig\$*.class')
+    exclude('**/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+}
+
+
+task copybin(dependsOn: ['buildFrameworkJar']) {
+
+    doLast {
+        
+        exec {
+            commandLine "${project.rootDir}\\builder\\gen_jiagu_bin\\d2j-jar2dex2bin.bat", "${fwJarOutputPath}/${fwJarOutputName}"
+        }
+        copy {
+            from "${project.projectDir}/${uc_asset0_bin}"
+            into "${project.rootDir}/${framework}${assetsPath}"
+        }
+        ////////////////////////////////////////////////////////////
+        copy {
+            from "${project.rootDir}/${framework}/${assetsPath}"
+            into "${project.rootDir}/${safety4fw}${assetsPath}"
+        }
+        copy {
+            from "${fwJarOutputPath}"
+            into "${project.rootDir}/${safety4fw}${fwJarPathTo}"
+        }
+        // -----------------------------------------------
+        copy {
+            from "${fwJarOutputPath}"
+            into "${project.rootDir}/${ucapp}${fwJarPathTo}"
+        }
+        // -----------------------------------------------
+        copy {
+            from "${fwJarOutputPath}"
+            into "${project.rootDir}/${uservice}${fwJarPathTo}"
+        }
+        // -----------------------------------------------
+    }
+}
+
+task buildUserviceRelease(dependsOn: ['copybin']) {
+    
+    doLast {
+        
+        
+        exec {
+            
+            Integer versionCode = "unset" == RELEASE_VERSION_CODE ? version_Code : Integer.parseInt(RELEASE_VERSION_CODE)
+
+            String versionName = "unset" == RELEASE_VERSION_NAME ? version_Name : RELEASE_VERSION_NAME
+            String spversionName = "unset" == SP_RELEASE_VERSION_NAME ? version_Name : SP_RELEASE_VERSION_NAME
+            
+            println("versionCode $versionCode     versionName $versionName")
+            
+            workingDir "."
+            commandLine "${project.rootDir}/builder/buildRelease.bat","$versionCode","$versionName","$spversionName"
+        }
+
+        println(">>>>>> BUILD SUCCESS :${project.rootDir}/uservice/build/outputs/apk/uservice-release.apk")
+    }
+}

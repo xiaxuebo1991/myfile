@@ -1,0 +1,1197 @@
+//  终端与服务器之间的性能日志接口proto文件
+//  在添加或修改字段的时候，需要兼容之前的版本
+//  兼容方法：
+//		删除字段：在后面注释在哪个版本中不使用，不允许直接删除，占用的ID不允许给其他字段使用
+//		新增字段：直接添加在最后面，ID依次增加
+//		修改字段：新增字段，并废除老的字段
+//
+//  version: 1.0
+//  time: 2016-05-25
+
+syntax = "proto2";
+
+option java_package = "com.ucloudlink.framework.protocol.protobuf.preflog";
+option java_outer_classname = "PreflogProtocol";
+option optimize_for = LITE_RUNTIME;
+
+message Position{
+	optional double longitude = 1; //终端接入地点的经度 未取到赋初始值-1   ,不需要  留空
+	optional double latitude = 2; //终端接入地点的纬度 未取到赋初始值-1    ，不需要 留空
+}
+
+message Mobile_net_pos{
+	optional string mcc = 1; //终端接入网络的移动国家码
+	optional string mnc = 2; //终端接入网络的移动网络号
+}
+
+// 网络信号，需要根据实际情况丰富
+message Mobile_signal{
+	optional int32 sig_strength = 1;  //终端接入网络的信号强度RSCP或者RxLev	如果未取到赋初始值 -1 （作为正值上报）
+	optional int32 sig_quality = 2; //终端接入网络的信号质量EcIo或者RxQual 如果未取到赋初始值 -1 （作为正值上报）
+}
+
+enum Net_type_e{
+	NET_TYPE_2G = 0;
+	NET_TYPE_3G = 1;
+	NET_TYPE_FDD_4G = 2;
+	NET_TYPE_TDD_4G = 3;
+	NET_TYPE_INVALID = 255;
+}
+
+enum Net_band_e{
+	NET_BAND_CLASS_NONE = -1; //*< FOR INTERNAL USE OF CM ONLY!                    */
+    NET_BAND_BC0 = 0;     //*< Band Class 0 - US Cellular band (800 MHz)       */
+    NET_BAND_BC1 = 1;     //*< Band Class 1 - US */
+    NET_BAND_BC3 = 3;      //*< Band Class 3 - Japanese Cellular band (800 MHz) */
+    NET_BAND_BC4 = 4;      //*< Band Class 4 - Korean PCS band (1800 MHz)       */
+    NET_BAND_BC5 = 5;      //*< Band Class 5 (450 MHz)                          */
+    NET_BAND_BC6 = 6;      //*< Band Class 6 (2 GHz)                            */
+    NET_BAND_BC7 = 7;      //*< Band Class 7 (700 MHz)                          */
+    NET_BAND_BC8 = 8;      //*< Band Class 8 (1800 MHz)                         */
+    NET_BAND_BC9 = 9;		  //*< Band Class 9 (900 MHz)                          */
+    NET_BAND_BC10 = 10;		//*< Band Class 10 (Second 800 MHz)                  */
+    NET_BAND_BC11 = 11;	  //*< Band Class 11 - European PAMR Band (400 MHz)    */
+    NET_BAND_BC12 = 12;		 //*< Band Class 12 - PAMR Band (800 MHz)               */
+    NET_BAND_BC14 = 14;		//*< Band Class 14 - Band Class 14 (US PCS 1.9GHz Band)*/
+    NET_BAND_BC15 = 15;		//*< Band Class 15 - Band Class 15 (1700-2100 MHz -AWS)*/
+    NET_BAND_BC16 = 16;		 //*< Band Class 16 - Band Class 16 (US 2.5GHz)         */
+	NAS_ACTIVE_BAND_BC_17_V01 = 17;
+	NAS_ACTIVE_BAND_BC_18_V01 = 18; 
+	NAS_ACTIVE_BAND_BC_19_V01 = 19; 
+
+    // gsm
+    NET_BAND_GSM_450 = 40;		//*< GSM 450 band (450 MHz)                          */
+    NET_BAND_GSM_480 = 41;		    //*< GSM 480 band (480 MHz)                          */
+    NET_BAND_GSM_750 = 42;		 //*< GSM 750 band (750 MHz)                          */
+    NET_BAND_NAS_BC_GSM_850 = 43;		  //*< GSM 850 band (850 MHz)                          */
+    NET_BAND_NAS_BC_GSM_900_EXTENDED = 44;		 //*< GSM Extended GSM (E-GSM) 900 band (900 MHz)     */
+    NET_BAND_GSM_PGSM_900 = 45;		 //*< GSM Primary GSM ( P-GSM) 900 band (900 MHz)     */
+    NET_BAND_GSM_RGSM_900 = 46;			//*< GSM Railways GSM ( R-GSM) 900 band (900 MHz)    */
+    NET_BAND_NAS_BC_GSM_1800 = 47;		 //*< GSM DCS band (1800 MHz)                         */
+    NET_BAND_NAS_BC_GSM_1900 = 48;		    //*< GSM PCS band (1900 Mhz)                         */
+
+    // wcdma
+    NAS_ACTIVE_BAND_WCDMA_2100_V01 = 80;
+	NAS_ACTIVE_BAND_WCDMA_PCS_1900_V01 = 81;
+	NAS_ACTIVE_BAND_WCDMA_DCS_1800_V01 = 82; 
+	NAS_ACTIVE_BAND_WCDMA_1700_US_V01 = 83;
+	NAS_ACTIVE_BAND_WCDMA_850_V01 = 84;
+	NAS_ACTIVE_BAND_WCDMA_800_V01 = 85; 
+	NAS_ACTIVE_BAND_WCDMA_2600_V01 = 86; 
+	NAS_ACTIVE_BAND_WCDMA_900_V01 = 87;
+	NAS_ACTIVE_BAND_WCDMA_1700_JAPAN_V01 = 88;
+	
+	NAS_ACTIVE_BAND_WCDMA_1500_JAPAN_V01 = 90; 
+	NAS_ACTIVE_BAND_WCDMA_850_JAPAN_V01 = 91;
+
+    // WLAN
+    NET_BAND_WLAN_US_2400 = 110;		  //*< WLAN US 2400 Mhz band                           */
+    NET_BAND_WLAN_JAPAN_2400 = 111;		    //*< WLAN JAPAN 2400 Mhz band                        */
+    NET_BAND_WLAN_EUROPE_2400 = 112;		    //*< WLAN EUROPEAN 2400 Mhz band                     */
+    NET_BAND_WLAN_FRANCE_2400 = 113;		    //*< WLAN FRANCE 2400 Mhz band                       */
+    NET_BAND_WLAN_SPAIN_2400 = 114;			    //*< WLAN SPAIN 2400 Mhz band                        */
+    NET_BAND_WLAN_US_5000 = 115;				   //*< WLAN US 5000 Mhz band                           */
+    NET_BAND_WLAN_JAPAN_5000 = 116;			  //*< WLAN JAPAN 5000 Mhz band                        */
+    NET_BAND_WLAN_EUROPE_5000 = 117;		//*< WLAN EUROPEAN 5000 Mhz band                     */
+    NET_BAND_WLAN_FRANCE_5000 = 118;		    //*< WLAN FRANCE 5000 Mhz band                       */
+    NET_BAND_WLAN_SPAIN_5000 = 119;		    //*< WLAN SPAIN 5000 Mhz band                        */
+
+    //lte
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_1_V01 = 120; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_2_V01 = 121; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_3_V01 = 122; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_4_V01 = 123; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_5_V01 = 124; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_6_V01 = 125; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_7_V01 = 126; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_8_V01 = 127; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_9_V01 = 128; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_10_V01 = 129; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_11_V01 = 130; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_12_V01 = 131; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_13_V01 = 132; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_14_V01 = 133; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_17_V01 = 134; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_33_V01 = 135; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_34_V01 = 136; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_35_V01 = 137; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_36_V01 = 138; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_37_V01 = 139; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_38_V01 = 140; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_39_V01 = 141; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_40_V01 = 142; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_18_V01 = 143; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_19_V01 = 144; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_20_V01 = 145; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_21_V01 = 146; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_24_V01 = 147; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_25_V01 = 148; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_41_V01 = 149; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_42_V01 = 150; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_43_V01 = 151; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_23_V01 = 152; 
+	NAS_ACTIVE_BAND_E_UTRA_OPERATING_BAND_26_V01 = 153; 
+	NAS_ACTIVE_BAND_TDSCDMA_BAND_A_V01 = 200; 
+	NAS_ACTIVE_BAND_TDSCDMA_BAND_B_V01 = 201; 
+	NAS_ACTIVE_BAND_TDSCDMA_BAND_C_V01 = 202; 
+	NAS_ACTIVE_BAND_TDSCDMA_BAND_D_V01 = 203; 
+	NAS_ACTIVE_BAND_TDSCDMA_BAND_E_V01 = 204; 
+	NAS_ACTIVE_BAND_TDSCDMA_BAND_F_V01 = 205;   
+	NAS_ACTIVE_BAND_ENUM_MAX_ENUM_VAL_V01 = 2147483647; 
+}
+
+enum Reg_status_e{
+    REG_STATUS_NONE = 0;
+    REG_STATUS_HOME = 1;
+    REG_STATUS_SEARCHING = 2;
+    REG_STATUS_DENIED = 3;
+    REG_STATUS_UNKNOWN = 4;
+    REG_STATUS_ROAMING = 5;
+}
+
+message Mobile_reg_status{
+	optional Reg_status_e cs_reg_status = 1; //终端接入网络的CS域注册状态
+	optional Reg_status_e ps_reg_status = 2; //终端接入网络的PS域注册状态
+}
+
+message Net_cell{
+    optional int32 cellid = 1; //终端当前最优小区或者服务小区的cell id   未取到赋初始值-1
+    optional int32 lacid = 2; //终端当前最优小区或者服务小区所属的lac id     未取到赋初始值-1
+}
+
+message Net_mbr{
+	optional int64 up_mbr = 1;  // 速率 未取到赋初始值-1 单位bps  不需要
+	optional int64 down_mbr = 2; // 速率 未取到赋初始值-1 单位bps  不需要
+}
+
+message Mobile_net{
+	optional Mobile_net_pos net_pos = 1; //终端接入网络位置
+	optional Net_type_e rat = 2 ; //终端接入网络的无线接入制式，0-2G，1-3G，2-FDD 4G，3-TDD 4G
+	optional Net_band_e band = 3; //终端接入网络的频段，枚举值终端按照协议上报
+	optional int32 rssi = 4; //终端接入网络的信号强度RSSI 未取到赋初始值-1 （作为正值上报）
+	optional Mobile_signal signal = 5; //终端接入网络的信号
+	optional Mobile_reg_status reg = 6; //终端接入网络的域注册状态
+	optional Net_cell cell = 7; //终端小区信息
+}
+
+enum Ter_type_e{
+	TER_TYPE_G1 = 0;
+	TER_TYPE_G1P = 1;
+	TER_TYPE_G1S = 2;
+	TER_TYPE_G2 = 3;
+	TER_TYPE_E1 = 4;
+	TER_TYPE_G3 = 5;
+	TER_TYPE_U3C = 6;
+	TER_TYPE_S1 = 7;
+	TER_TYPE_COOL1 = 8;
+}
+
+message Comm_head{
+	optional uint32 trans_times = 1; //消息块上传的次数，默认为0，重传则往上递增
+	optional Ter_type_e type = 2;  //终端设备类型
+	optional string host_sw_ver = 3; //service版本号
+	optional string ext_sw_ver = 4; //rom版本号
+	optional string imei = 5; //终端副板IMEI号，用于和accessId一起作为话单拼接
+	optional uint32 accessId = 6; //终端接入id，采用终端开机时间
+	optional string user_name = 7; //用户登录的用户名
+	optional string sessionId = 8; // 用户登录后从服务器获取的sessionid 只取后8位
+	optional uint32 power_cap = 9; // 电池电量
+	optional bool isConnectWifi = 10; // 是否连接wifi
+	optional bool isOpenHostpot = 11; // 是否开启热点
+	optional bool isScreenOn    = 12; // 是否屏幕点亮
+}
+
+enum Net_ability_type{
+	NET_ABILITY_TYPE_NONE = 0;
+	NET_ABILITY_TYPE_GPRS = 1;
+	NET_ABILITY_TYPE_EDGE = 2;
+	NET_ABILITY_TYPE_HSDPA = 3;
+	NET_ABILITY_TYPE_HSUPA = 4;
+	NET_ABILITY_TYPE_WCDMA = 5;
+	NET_ABILITY_TYPE_CDMA = 6;
+	NET_ABILITY_TYPE_EVDO_REV_O = 7;
+	NET_ABILITY_TYPE_EVDO_REV_A = 8;
+	NET_ABILITY_TYPE_GSM = 9;
+	NET_ABILITY_TYPE_EVDO_REV_B = 10;
+	NET_ABILITY_TYPE_LTE = 11;
+	NET_ABILITY_TYPE_HSPDA_PLUS = 12;
+	NET_ABILITY_TYPE_DC_HSDPA_PLUS = 13;
+}
+
+message Net_ability{
+	optional Net_ability_type up_ability = 1; // 上行业务能力
+	optional Net_ability_type down_ability = 2;	// 下行业务能力
+}
+
+message Err_info{
+	optional uint32 err_type = 1; // 错误消息类型
+	optional uint32 err_code = 2; // 对应消息的错误码
+}
+
+// 种子卡信息
+message Seed_card{
+	optional string iccid = 1;
+	optional string imsi = 2;
+	optional uint32 ssim_ip = 3;
+}
+
+enum Sys_start_type{
+	SYS_START_NONE = 0;
+	SYS_START_NORMAL = 1; // 正常启动，手动启动或手动重启
+	SYS_START_LOW_POWER = 2;  // 因为电量过低导致自动关机，或异常重启
+	SYS_START_OTHER_ABNORMAL = 3; // 其他异常启动
+}
+
+enum Sys_abnormal_boot_reason{
+	SYS_ABNORMAL_BOOT_REASON_NONE = 0;
+}
+
+message Sys_start_info{
+	optional Sys_start_type type = 1;
+	optional uint32 reboot_times = 2; // 异常重启时的重启次数（type = SYS_START_LOW_POWER or SYS_START_OTHER_ABNORMAL）
+	optional Sys_abnormal_boot_reason reason = 3; // 上次重启原因
+}
+
+
+
+// ssim卡连接失败错误码: err type
+enum Ssim_est_fail_errtype{
+	SSIM_EST_NO_ERROR = 0;
+    SSIM_EST_FAIL_NETWORK_LOCATION_UPDATING_REJECT = 1;
+    SSIM_EST_FAIL_NETWORK_ROUTING_UPDATE_REJECT = 2;
+    SSIM_EST_FAIL_NETWORK_AUTHENTICATION_REJEDT = 3;
+    SSIM_EST_FAIL_NETWORK_AUTHENTICATION_FAILURE = 4;
+    SSIM_EST_FAIL_NETWORK_AUTHENTICATION_AND_CIPHERION_REJECT = 5;
+    SSIM_EST_FAIL_NETWORK_AUTHENTICATION_AND_CIPHERION_FAILURE = 6;
+    SSIM_EST_FAIL_NETWORK_ATTACH_REJECT = 7;
+    SSIM_EST_FAIL_NETWORK_SERVICE_REJECT = 8;
+    SSIM_EST_FAIL_NETWORK_NO_SERVICE = 9;
+    SSIM_EST_FAIL_NETWORK_COUNTRY_CHANGE = 10;
+
+    SSIM_EST_FAIL_CONN_PDP_REJECT = 100;
+    SSIM_EST_FAIL_CONN_MODIFY_PDP_REJECT = 101;
+    SSIM_EST_FAIL_CONN_CONNECT_FAIL = 102;
+    SSIM_EST_FAIL_CONN_CONNECT_TIMEOUT = 103;
+    SSIM_EST_FAIL_CONN_CONNECT_CLOSE = 104;
+    SSIM_EST_FAIL_CONN_SOCKET_FAIL = 105;
+    SSIM_EST_FAIL_CONN_SOCKET_TIMEOUT = 106;
+    SSIM_EST_FAIL_CONN_SOCKET_CLOSE = 107;
+    SSIM_EST_FAIL_CONN_LOGIN_FAIL = 108;
+    SSIM_EST_FAIL_CONN_LOGIN_TIMEOUT = 109;
+    SSIM_EST_FAIL_CONN_LOGIN_EXIT = 110;
+    SSIM_EST_FAIL_CONN_SERVER_FORCE_EXIT = 111;
+	SSIM_EST_FAIL_UNKNOWN = 112;
+}
+
+// vsim卡连接失败， 对应err type,
+enum Vsim_est_fail_errtype{
+	VSIM_EST_NO_ERR = 0;
+    VSIM_EST_FAIL_NETWORK_LOCATION_UPDATING_REJECT = 1;
+    VSIM_EST_FAIL_NETWORK_ROUTING_UPDATE_REJECT = 2;
+    VSIM_EST_FAIL_NETWORK_AUTHENTICATION_REJECT = 3;
+    VSIM_EST_FAIL_NETWORK_AUTHENTICATION_FAILURE = 4;
+    VSIM_EST_FAIL_NETWORK_AUTHENTICATION_AND_CIPHERION_REJECT = 5;
+    VSIM_EST_FAIL_NETWORK_AUTHENTICATION_AND_CIPHERION_FAILURE = 6;
+    VSIM_EST_FAIL_NETWORK_ATTACH_REJECT = 7;
+    VSIM_EST_FAIL_NETWORK_LTE_ATTACH_REJECT = 8;
+    VSIM_EST_FAIL_NETWORK_PDP_ACTIVATE_REJECT = 9;
+    VSIM_EST_FAIL_NETWORK_TRACKING_AREA_REJECT = 10;
+
+    VSIM_EST_FAIL_NETWORK_PDN_CONNECTIVITY_REJECT = 11;
+    VSIM_EST_FAIL_NETWORK_EMM_AUTHENTICATION_REJECT = 12;
+    VSIM_EST_FAIL_NETWORK_EMM_AUTHENTICATION_FAILURE = 13;
+    VSIM_EST_FAIL_NETWORK_EMM_SECURITY_MODE_REJECT = 14;
+    VSIM_EST_FAIL_ETWORK_ACTIVATE_DEDICATED_EPS_BEARER_CONTEXT_REJECT = 15;
+    VSIM_EST_FAIL_ETWORK_MODIFY_EPS_BEARER_CONTEXT_REJECT = 16;
+    VSIM_EST_FAIL_NETWORK_SERVICE_REJECT = 17;
+    VSIM_EST_FAIL_NETWORK_NO_SERVICE = 18;
+
+    VSIM_EST_FAIL_CONN_PDP_REJECT = 100;
+    VSIM_EST_FAIL_CONN_MODIFY_PDP_REJECT = 101;
+    VSIM_EST_FAIL_CONN_ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_REJECT = 102;
+    VSIM_EST_FAIL_CONN_ACTIVATE_DEDICATED_EPS_BEARER_CONTEXT_REJECT = 103;
+    VSIM_EST_FAIL_CONN_MODIFY_EPS_BEARER_CONTEXT_REJECT = 104;
+    VSIM_EST_FAIL_CONN_CONNECT_FAIL = 105;
+    VSIM_EST_FAIL_CONN_CONNECT_TIMEOUT = 106;
+    VSIM_EST_FAIL_CONN_CONNECT_CLOSE = 107;
+    VSIM_EST_FAIL_CONN_SOCKET_FAIL = 108;
+    VSIM_EST_FAIL_CONN_SOCKET_TIMEOUT = 109;
+    VSIM_EST_FAIL_CONN_SOCKET_CLOSE = 110;
+	VSIM_EST_FAIL_UNKNOWN = 111;
+}
+
+
+////
+//	VSIM_EST_FAIL_NETWORK_LOCATION_UPDATING_REJECT
+//	VSIM_EST_FAIL_NETWORK_ROUTING_UPDATE_REJECT
+//	VSIM_EST_FAIL_NETWORK_ATTACH_REJECT
+//	VSIM_EST_FAIL_NETWORK_LTE_ATTACH_REJECT
+//	VSIM_EST_FAIL_NETWORK_PDP_ACTIVATE_REJECT
+//	VSIM_EST_FAIL_NETWORK_TRACKING_AREA_REJECT
+//	VSIM_EST_FAIL_NETWORK_PDN_CONNECTIVITY_REJECT
+//	VSIM_EST_FAIL_ETWORK_MODIFY_EPS_BEARER_CONTEXT_REJECT
+//	VSIM_EST_FAIL_NETWORK_SERVICE_REJECT
+////
+
+enum Vsim_network_reject_cause{
+	VSIM_NETWORK_REJECT_CAUSE_NONE = 0;
+	VSIM_NETWORK_REJECT_CAUSE_ILLEGAL_MS = 3;
+	VSIM_NETWORK_REJECT_CAUSE_IMSI_UNKNOWN_IN_VLR = 4;
+	VSIM_NETWORK_REJECT_CAUSE_ILLEGAL_ME = 6;
+	VSIM_NETWORK_REJECT_CAUSE_GPRS_SERVICES_NOT_ALLOWED = 7;
+	VSIM_NETWORK_REJECT_CAUSE_GPRS_SERVICES_AND_NON_GPRS_SERVICES_NOT_ALLOWED = 8;
+}
+
+//// 	VSIM_EST_FAIL_NETWORK_AUTHENTICATION_REJECT, 
+//	VSIM_EST_FAIL_NETWORK_AUTHENTICATION_AND_CIPHERION_REJECT,
+//	VSIM_EST_FAIL_NETWORK_ROUTING_UPDATE_REJECT,
+//	VSIM_EST_FAIL_NETWORK_SERVICE_REJECT,
+//	VSIM_EST_FAIL_NETWORK_ATTACH_REJECT,
+//	VSIM_EST_FAIL_NETWORK_LOCATION_UPDATING_REJECT,
+//	VSIM_EST_FAIL_NETWORK_TRACKING_AREA_REJECT,
+//	上面类型对应的错误码
+////
+
+////
+//enum Vsim_est_reject_suberr{
+//	VSIM_REJECT_LTE_NAS_CAUSE_NONE = 0;
+//	VSIM_REJECT_LTE_NAS_IMSI_UNKNOWN_IN_HSS = 2;
+//	VSIM_REJECT_LTE_NAS_ILLEGAL_UE = 3;
+//	VSIM_REJECT_LTE_NAS_IMEI_NOT_ACCEPTED = 5;
+//	VSIM_REJECT_LTE_NAS_ILLEGAL_ME = 6;
+//	VSIM_REJECT_LTE_NAS_EPS_SERVICES_NOT_ALLOWED = 7;
+//	VSIM_REJECT_LTE_NAS_EPS_SERVICES_AND_NON_EPS_SERVICES_NOT_ALLOWED = 8;
+//	VSIM_REJECT_LTE_NAS_UE_ID_CANNOT_BE_DERIVED_BY_NW = 9;
+//	VSIM_REJECT_LTE_NAS_IMPLICITLY_DETACHED = 10;
+//	VSIM_REJECT_LTE_NAS_PLMN_NOT_ALLOWED = 11;
+//	VSIM_REJECT_LTE_NAS_TRACKING_AREA_NOT_ALLOWED =12;
+//	VSIM_REJECT_LTE_NAS_ROAMING_NOT_ALLOWED_IN_THIS_TRACKING_AREA=13;
+//	VSIM_REJECT_LTE_NAS_EPS_SERVICES_NOT_ALLOWED_IN_PLMN =14;
+//	VSIM_REJECT_LTE_NAS_NO_SUITABLE_CELLS_IN_TRACKING_AREA = 15;
+//	VSIM_REJECT_LTE_NAS_MSC_TEMPORARILY_NOT_REACHABLE=16;
+//	VSIM_REJECT_LTE_NAS_NW_FAILURE = 17;
+//	VSIM_REJECT_LTE_NAS_CS_DOMAIN_NOT_AVAILABLE = 18;
+//	VSIM_REJECT_LTE_NAS_ESM_FAILURE = 19;
+//	VSIM_REJECT_LTE_NAS_MAC_FAILURE = 20;
+//	VSIM_REJECT_LTE_NAS_SYNCH_FAILURE = 21;
+//	VSIM_REJECT_LTE_NAS_CONGESTION = 22;
+//	VSIM_REJECT_LTE_NAS_UE_SECURITY_CAPABILITIES_MISMATCH = 23;
+//	VSIM_REJECT_LTE_NAS_SECURITY_MODE_REJ_UNSPECIFIED = 24;
+//	VSIM_REJECT_LTE_NAS_NOT_AUTHORIZED_FOR_THIS_CSG = 25;
+//	VSIM_REJECT_LTE_NON_EPS_AUTH_UNACCEPTABLE = 26;
+//	VSIM_REJECT_LTE_NAS_CS_FALLBACK_CALL_EST_NOT_ALLOWED = 38;
+//	VSIM_REJECT_LTE_NAS_CS_DOMAIN_TEMP_NOT_AVAILABLE = 39;
+//	VSIM_REJECT_LTE_NAS_NO_EPS_BEARER_CONTEXT_ACTIVATED=40;
+//	VSIM_REJECT_LTE_NAS_SEVERE_NW_FAILURE = 42;
+//	VSIM_REJECT_LTE_NAS_SEMANTICALLY_INCORRECT_MSG = 95;
+//	VSIM_REJECT_LTE_NAS_INVALID_MANDATORY_INFO = 96;
+//	VSIM_REJECT_LTE_NAS_NON_EXISTENT_MSG_TYPE = 97;
+//	VSIM_REJECT_LTE_NAS_MSG_TYPE_INCOMPATIBLE_WITH_PROTOCOL_STATE = 98;
+//	VSIM_REJECT_LTE_NAS_NON_EXISTANT_INFO = 99;
+//	VSIM_REJECT_LTE_NAS_CONDITIONAL_IE_ERROR = 100;
+//	VSIM_REJECT_LTE_NAS_MSG_INCOMPATIBLE_WITH_PROTOCOL_STATE = 101;
+//	VSIM_REJECT_LTE_NAS_PROTOCOL_ERROR_UNSPECIFIED = 111;
+//	VSIM_REJECT_LTE_NAS_NO_FAILURE = 256; // IF ADDING ANY NEW CAUSE VALUES ADD BEFORE THIS
+//}
+////
+
+////
+//	SSIM_EST_FAIL_NETWORK_AUTHENTICATION_FAILURE
+//	NETWORK_AUTHENTICATION_AND_CIPHERION_FAILURE
+//	上面类型对应的错误码
+////
+enum Vsim_est_auth_suberr{
+	VSIM_EST_AUTH_NO_ERROR = 0;
+	VSIM_EST_AUTH_CAN_NOT_PERFORM_AUTHENTICATION = 1;
+	VSIM_EST_AUTH_SKIP_AUTHENTICATION_RESPONSE = 2;
+	VSIM_EST_AUTH_MAK_CODE_FAILURE = 20;
+	VSIM_EST_AUTH_SQN_FAILURE = 21;
+	VSIM_EST_AUTH_AUTHENTICATION_UNACCEPTABLE = 23;
+	VSIM_EST_AUTH_NON_EPS_ACCESS = 26;
+}
+
+////
+//	HOST_CONNECTION_PDP_REJECT
+//	上面类型对应的错误码
+////
+enum Vsim_est_pdp_reject_suberr{
+	VSIM_PDP_NAS_ESM_NONE = 0;
+	VSIM_PDP_NAS_ESM_OPTR_DETERMINED_BARRING = 8;
+	VSIM_PDP_NAS_ESM_INSUFFICIENT_RESOURCES = 26;
+	VSIM_PDP_NAS_ESM_UNKNOWN_MISSING_APN = 27;
+	VSIM_PDP_NAS_ESM_UNKNOWN_PDN_TYPE = 28;
+	VSIM_PDP_NAS_ESM_USER_AUTHENTICATION_FAILED = 29;
+	VSIM_PDP_NAS_ESM_OPN_REJ_SERVICING_GW_OR_PDN_GW = 30;
+	VSIM_PDP_NAS_ESM_ACTIVATION_REJECTED = 31;
+	VSIM_PDP_NAS_ESM_SERV_OPT_NOT_SUPPORTED = 32;
+	VSIM_PDP_NAS_ESM_REQ_SERV_OPT_NOT_SPECIFIED =33;
+	VSIM_PDP_NAS_ESM_SERV_OPT_TEMP_OUT_OF_ORDER = 34;
+	VSIM_PDP_NAS_ESM_PTI_ALREADY_IN_USE = 35;
+	VSIM_PDP_NAS_ESM_REGULAR_DEACTIVATION = 36;
+	VSIM_PDP_NAS_ESM_EPS_QOS_NOT_ACCEPTED = 37;
+	VSIM_PDP_NAS_ESM_NETWORK_FAILURE = 38;
+	VSIM_PDP_NAS_ESM_REACTIVATION_REQUIRED= 39;
+	VSIM_PDP_NAS_ESM_FEATURE_NOT_SUPPORTED = 40;
+	VSIM_PDP_NAS_ESM_SEMANTIC_ERR_IN_TFT_OPERATION = 41;
+	VSIM_PDP_NAS_ESM_SYNTACTICAL_ERR_IN_TFT_OPERATION = 42;
+	VSIM_PDP_NAS_ESM_UNKNOWN_EPS_BEARER_CONTEXT = 43;
+	VSIM_PDP_NAS_ESM_SYMANTIC_ERR_IN_PKT_FILTER = 44;
+	VSIM_PDP_NAS_ESM_SYNTACTICAL_ERR_IN_PKT_FILTER = 45;
+	VSIM_PDP_NAS_ESM_EPS_BEARER_CONT_WO_TFT_ALREADY_ACT = 46;
+	VSIM_PDP_NAS_ESM_PTI_MISMATCH = 47;
+	// This is not in the standard in table 9.9.4.4.1; but is referred to in section 7.3 of the standard */
+	VSIM_PDP_NAS_ESM_LAST_PDN_DISCONNECTED_NOT_ALLOWED = 49;
+	VSIM_PDP_NAS_ESM_PDN_TYPE_IPV4_ONLY_ALLOWED = 50;
+	VSIM_PDP_NAS_ESM_PDN_TYPE_IPV6_ONLY_ALLOWED = 51;
+	VSIM_PDP_NAS_ESM_SINGLE_ADR_BEARERS_ONLY_ALLOWED = 52;
+	VSIM_PDP_NAS_ESM_ESM_INFO_NOT_RECEIVED = 53;
+	VSIM_PDP_NAS_ESM_PDN_CONN_DOES_NOT_EXIST = 54;
+	VSIM_PDP_NAS_ESM_MULTIPLE_PDN_CONN_FOR_GIVEN_APN_NOT_ALLOWED = 55;
+	VSIM_PDP_NAS_ESM_COLLISION_WITH_NW_INIT_REQ = 56;
+	VSIM_PDP_NAS_ESM_UNSUPPORTED_QCI_VALUE = 59;
+	VSIM_PDP_NAS_ESM_INVALID_PTI_VALUE = 81;
+	VSIM_PDP_NAS_ESM_SYMANTICALLY_INVALID_MSG = 95;
+	VSIM_PDP_NAS_ESM_INVALID_MANDATORY_INFORMATION = 96;
+	VSIM_PDP_NAS_ESM_MSG_TYPE_NON_EXISTANT = 97;
+	VSIM_PDP_NAS_ESM_MSG_TYPE_INCOMPATIBLE_PROT_STATE = 98;
+	VSIM_PDP_NAS_ESM_INFO_ELEMENT_NON_EXISTANT = 99;
+	VSIM_PDP_NAS_ESM_CONDITIONAL_IE_ERR = 100;
+	VSIM_PDP_NAS_ESM_MSG_INCOMPATIBLE_WITH_PRO_STATE= 101;
+	VSIM_PDP_NAS_ESM_PROTOCOL_ERROR = 111;
+	VSIM_PDP_NAS_ESM_APN_RESTRICT_VAL_INCOMPAT_WITH_ACT_CONTEXT = 112;
+	VSIM_PDP_NAS_ESM_NO_FAILURE = 113;  // IF ADDING ANY NEW CAUSE VALUES ADD BEFORE THIS*/
+}
+
+
+
+enum rpc_err_type{
+	RPC_E_SUCCESS = 0; //没有错误 */
+    RPC_E_LOGIN_USERNAME_ERR = 1;    // 用户不存在*/
+    RPC_E_LOGIN_PASSWORD_ERR = 2;    // 密码不正确*/
+    RPC_E_LOGIN_NULL_IMEI_ERR = 3;    // imei号码不能为空*/
+    RPC_E_LOGIN_LOCAL_NODE_PROVIDE_NOSERVICE_ERR = 4;    //该服务配置为地方资源节点，在分布式部署模式下不提供认证服务！*/
+    RPC_E_LOGIN_IMEI_NUM_INVALID_ERR = 5;  // imei号码不存在*/
+    RPC_E_LOGIN_USER_UE_BIND_ERR = 6; //终端绑定相关错误*/
+    RPC_E_LOGIN_USER_ACCOUNT_OWE_FEE_ERR = 7; //帐户欠费*/
+    RPC_E_ACCESS_UNAUTHORIZED_REMOTE_SEVICE_ERR = 8; // 不能访问未授权的远程服务*/
+    RPC_E_CONNECT_BAM_SERVICE_ERR = 9; // 尝试多次后连接BAM服务异常*/
+    RPC_E_RESPONSE_FROM_BAM_ERR = 10; // BAM回复异常*/
+    RPC_E_LOGIN_SIDLIST_EMPTY_ERR = 11; // vsim调度失败，传入的SID列表为空*/
+    RPC_E_LOGIN_NO_AVALIABLE_VSIM_ERR = 12; // vsim调度失败，没可用VSIM资源*/
+    RPC_E_LOGIN_USER_BINDING_ERROR = 13;//start add by sunshuai 用户绑定状态错误 13*/
+    RPC_E_LOGIN_ACCOUNT_DISABLE = 14;//账户被停用  14*/
+    RPC_E_LOGIN_GROUP_USER = 15;//当前用户为集团用户 15*/
+    RPC_E_LOGIN_INACTIVE_USER = 16;//免费试用过期，仍未激活用户 16*/
+    RPC_E_LOGIN_INACTIVE_ACCOUNT = 17;//账户未激活 17*/
+    RPC_E_LOGIN_REPEAT_LOGIN = 18;//重复登录 18*/
+    RPC_E_LOGIN_NO_OLD_SYSTEM = 19;//不属于老系统，不允许登录19*/
+    RPC_E_LOGIN_BAM_ABNORMAL = 20;//BAM 异常20*/
+    RPC_E_LOGIN_BAM_CARD_ABNORMAL = 21;//BAM 上卡异常21*/
+    RPC_E_LOGIN_SWITCH_CARD_PLMN_EMPTY = 22;//换卡接口PLMNLIST 参数为空值 22*/    
+    RPC_E_LOGIN_PLMNLIST_CSQ_LESS_THAN_RSSI = 23;//上报的PLMNLIST信号强度都小于 RSSIVALUE 23*/   
+
+	RPC_E_TIMEOUT = 100;  //命令超时
+    RPC_E_PARSE_ERR = 101; //解析错误
+    RPC_E_CODE_FAILED = 102; //无法获取错误码，错误码格式： 以‘E’开头，以‘-’结束，
+	RPC_E_UNKNOWN = 103;
+
+	//  新版本错误码，老版本保留 */
+	// For BSS */
+    RPC_ENN_01160001_USERNAME_ERR           = 1000;      // 等同ECA0001-, 用户不存在 */
+    RPC_ENN_01160002_PASSWORD_ERR           = 1001;      // 等同ECA0002-, 密码验证失败 */
+    RPC_ENN_01160003_IMEI_IS_NULL           = 1002;      // 等同ECA0003-, IMEI不能为空/用户名为空 */
+    RPC_ENN_01160004_USER_UN_BIND           = 1003;      // 等同ECA0006-, 不存在IMEI的绑定关系 */
+    RPC_E24_01160005_USER_UN_BIND           = 1004;      // 等同ECA0007-, 用户帐号或密码为空，且绑定状态不为绑定中 */
+    RPC_ENN_01160006_INACTIVE_USER          = 1005;      // 等同ECA0011-, 免费试用过期，但用户仍未激活 */
+    //RPC_ENN_01160007
+    RPC_E25_01160008_BOTH_DPKG_MPKG         = 1006;      // 等同ECA0014-, 用户同时存在包天包月 */
+    RPC_E26_01160009_USERS_LIMIT_IN_MPAGE   = 1007;      // 等同ECA0015-, 包月超过最大用户数 */
+    RPC_ENN_01160010_NOT_AFFORD_DAY_PKG     = 1008; 	 // 等同ECA0016-, 帐户份额不足包天费 */
+    RPC_ENN_01160011_OUT_OF_PKG_FIELD       = 1009;      // 等同ECA0017-, 不在优惠国家范围内 */
+    RPC_E52_01160012_GET_USER_FAILED        = 1010;      // 等同ECA0019-, 获取用户失败 */
+    RPC_E05_01160013_IMEI_NOT_EXIST         = 1011;      // 等同ECA0020-, IMEI不存在 */
+    //RPC_E05_01160014_IMEI_DELETED         = 1012;      // 等同ECA0021-, IMEI已被 删除 */
+    RPC_E53_01160015_GET_TOKEN_FAILED       = 1013;      // 等同ECA0022-, 获取AccesToken异常 */
+    RPC_E54_01160016_USER_DATA_ERROR        = 1014;      // 等同ECA0023-, 帐户数据异常 */
+    RPC_E55_01160017_BSS_UNKNOWN_ERR        = 1015;      // 等同ECA0026-, BSS未知异常 */
+    RPC_E14_01160018_USER_BLOCKED           = 1016;      // 等同ECA0007-, 帐户被停用 */
+    
+    // For ASS */
+    RPC_E56_02161111_BSS_INVOK_FAILED       = 1017;      // 等同E1111-，BSS调用失败 */
+    RPC_E57_02162000_CSS_INVOK_FAILED       = 1018;      // 等同E2000-，CSS调用失败 */
+    RPC_E58_02163000_OSS_INVOK_FAILED       = 1019;      // 等同E3000-，OSS调用失败 */
+    RPC_E59_02164000_BAM_INVOK_FAILED       = 1020;      // 等同E4000-，BAM调用失败 */
+    RPC_ENR_02160001_UNAUTHORIZED_ERR       = 1021; 	 // 等同ESYS0001-，无效sessionid */
+    RPC_E60_02160002_APDU_EXCEPTION         = 1022;      // 等同ESYS0002-，APDU处理异常 */
+    RPC_E61_02160003_DUBBO_EXCEPTION        = 1023;      // 等同ESYS0003-，调用dubbo服务异常 */
+    RPC_E62_02160004_SYS_INVOK_ERR          = 1024;      // 等同ESYS0004-，调用系统服务异常 */
+    RPC_ENR_02160006_SID_IS_EMPTY           = 1025; 	 // 等同ESYS0006-，终端登录请求sid is empty!*/
+    RPC_ENR_02160007_IMEI_IS_EMPTY          = 1026; 	 // 等同ESYS0007-，终端登录请求imei is empty! */
+    RPC_ENR_02160008_LOGIN_RETURN_NULL      = 1027; 	 // 等同ESYS0008-，终端登录失败，登录返回结果为null */
+    RPC_ENR_02160009_CHECK_SVC_LIST_FAIL    = 1028; 	 // 等同ESYS0009-，查询服务列表失败 */
+    RPC_E63_02160010_GET_VSIM_FAIL          = 1029;      // 等同ESYS0010-，用户分卡失败 */
+    RPC_E64_02160011_INVOK_LOGIN_API_FAIL   = 1030;      // 等同ESYS0011-，调用auth服务登录接口出错 */
+    RPC_E07_02160012_ACCOUNT_ARREAR         = 1031;      // 等同ESYS0012-，余额不足，拒绝登录 */
+    RPC_ENR_02160020_PLMNLIST_IS_NULL       = 1032; 	 // 等同ESYS0020-，换卡接口plmnList参数为空值 */
+    RPC_E13_02169999_ASS_UNKNOWN_ERR        = 1033;      // 等同ESYS9999-，ASS未知错误 */
+
+    // For CSS */
+    RPC_E12_03040000_NO_SUITABLE_VSIM               = 1034;      // 没有分到合适的卡 */
+    RPC_E50_03040001_USERINFO_FROM_BSS_FAIL         = 1035;      // 从BSS获取用户信息失败 */
+    RPC_ENR_03040002_NET_SET_IS_NULL                = 1036; 	 // 终端上报的网络，对应的网络集为空 */
+    RPC_E27_03040003_COUNTRY_SET_IS_NULL            = 1037;      // 终端上报的网络，对应国家为空 */
+    RPC_E28_03040004_GET_PRODUCT_ID_FAILED          = 1038;      // 根据产品ID获取不到产品 */
+    RPC_E29_03040005_GET_STRATEGY_FAILED            = 1039;      // 根据策略找不到策略 */
+    RPC_E30_03040006_GET_VSIM_POOL_FAILED           = 1040;      // 根据ID找不到卡池 */
+    RPC_ENR_03040007_CANNOT_FIND_OBJ_BY_IMSI        = 1041; 	 // 根据imsi找不到卡对象 */
+    RPC_ENR_03040008_CANNOT_FIND_OBJ_BY_USERCODE    = 1042; 	 // 根据userCode找不到用户卡在线对象 */
+    RPC_ENR_03040009_ONLIN_OBJ_NO_IMSI              = 1043; 	 // 卡在线对象，卡号不存在 */
+    RPC_E51_03040010_NETWORK_RAT_ERROR              = 1044;      // 网络制式错误 */
+    RPC_ENR_03040011_UPDATE_USER_STATE_ERR          = 1045; 	 // 更新用户在线状态错误 */
+    RPC_ENR_03040012_ADD_VSIM_LOG_ERR               = 1046; 	 // 添加分卡日志错误 */
+    RPC_ENN_03040013_NO_AVAILABLE_NETWORK           = 1047; 	 // 当前设备所在位置网络信号太差，没有可用网络 */
+    RPC_E31_03040100_CANNOT_FIND_GROUP_BY_IMSI      = 1048;      // 根据Imsi找不到Group对象 */
+    RPC_ENR_03040200_RELEASE_VSIM_FAILED            = 1049; 	 // 释放卡失败 */
+    RPC_ENR_03040201_LAST_IMSI_EXCEPTION            = 1050; 	 // 上次使用的Imsi号错误 */
+
+    // Part2: 本地定义的错误 */
+    LOCAL_E100_00000100_UNDEFINED_ERR        = 1051;  // 未定义错误 */
+    LOCAL_E101_00000101_PARSE_ERR            = 1052;  // 解析错误 */
+    LOCAL_E102_00000102_TIMEOUT              = 1053;  // 命令超时 */
+    LOCAL_ENNN_00000103_LOGIN_SOMEWHERE_ELSE = 1054;  // 在别处登录 */
+    LOCAL_ENNN_00000104_HARDWARE_ERR         = 1055;  // 本地错误，硬件错误 */
+}
+
+//换卡原因， 只填errtype
+enum Vsim_switch_realson{
+	SWITCH_VSIM_CMD_FROM_WWS = 0;   // 服务器下指令要求执行换卡 */
+    SWITCH_VSIM_PDP_REJECTED_5TIMES = 1;  // pdp 连续被拒绝5 次 */
+    SWITCH_VSIM_ATTACH_REJECTED = 2;    // Attach 被拒绝 */
+    SWITCH_VSIM_REG_NETWORK_FAILED = 3;   // 注册不到网络 */
+    SWITCH_VSIM_HOST_CREAT_SOCKET_FAILED = 4;  // 主板建立socket不成功，重拨5 次都不行 */
+    SWITCH_VSIM_REG_OTHER_NET_AND_NO_PS = 5; // 注册到其它网络没有数据业务 */
+    SWITCH_VSIM_ILLEGALITY_VIRTUAL_IMEI = 6;
+    SWITCH_VSIM_VSIM_BIN_PACK_TOO_LONG = 7;
+    SWITCH_VSIM_VSIM_BIN_PACK_DOWNLOAD_ERROR = 8;
+    SWITCH_VSIM_VSIM_BIN_PACK_DATA_ERROR = 9;
+    SWITCH_VSIM_BAM_APDU_ERR = 10; // 服务器BAM 错误 APDU 返回 FF */    	
+    SWITCH_VSIM_FROM_RTU = 11;
+    SWITCH_VSIM_SOCKET_CREATE_ERROR = 12;
+    SWITCH_VSIM_DATACALL_FAIL = 13;
+    SWITCH_VSIM_MCC_CHANGE = 14;
+    SWITCH_VSIM_PUBLISH_TIMEOUT = 15; //惩罚机制超时
+}
+
+enum Limit_result_e {
+    LIMIT_RESULT_SUCCESS = 0;		
+	LIMIT_RESULT_QOS_FAILD = 1;
+	LIMIT_RESULT_QOS_FAIL_AND_RETRY = 2;
+	LIMIT_RESULT_QOS_CHANGE = 3;
+}
+
+
+//Ssim_EstFail   
+//描述：记录云卡启动过程中触发失败的打点信息
+//触发：开机或者整机重启后到云卡启动成功过程中触发任何失败环节时输出
+message Ssim_EstFail{
+	optional Comm_head head = 1; // 共同消息
+	//uint32 startTime = 2; //设备开机的时间 0.2版本去掉了
+	optional int32 errorTime = 3; //触发错误的时间  未取到赋初始值 -1 
+	optional Position pos = 4; //终端接入地点 不需要
+	optional Mobile_net net = 5; //终端网络信息
+	optional Err_info err = 6; //触发失败的错误信息
+	optional Sys_start_info sys_start = 7; // 系统启动信息
+	optional Seed_card ssim_info = 8; //副板相关信息
+	optional Net_mbr mbr = 9; // 副板拨号成功与网络协商的mbr
+}
+
+//Ssim_EstSucc
+//描述：记录副板与服务器SOCKET建立成功的打点信息
+//触发：开机或者整机重启后副板发起搜网注册到副板SOCKET建立成功时输出
+message Ssim_EstSucc{
+	optional Comm_head head = 1; // 共同消息
+	//uint32 startTime = 2; //设备开机的时间
+	optional int32 succTime = 3; //触发错误的时间 未取到赋初始值 -1 
+	optional Position pos = 4; //终端接入地点 不需要
+	optional Mobile_net net = 5; //终端网络信息
+	optional Sys_start_info sys_start = 6; // 系统启动信息
+	optional Seed_card ssim_info = 7; //副板相关信息
+	optional Net_mbr mbr = 8; // 副板拨号成功与网络协商的mbr 不需要
+}
+
+enum LoginResult_E {
+	LOGIN_RESULT_SUCC = 0;
+}
+
+//Ssim_Login
+//描述：记录副板与服务器登录失败或成功的打点信息
+//触发：副板收到login response时输出
+message Ssim_Login{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 loginReqTime = 2; //设备开机的时间单位s	未取到赋初始值 -1 
+	optional int32 loginResTime = 3; //触发错误的时间单位s	未取到赋初始值 -1 
+	optional uint32 loginSN = 4; //登陆包的SN序号
+	optional rpc_err_type loginResult = 5; //服务器返回的login Response结果（成功为0，失败则为实际错误码，）
+	optional string sessionId = 6; //服务器分配的session id截取后8位
+	optional Mobile_net net = 7; //终端网络信息
+	optional Position pos = 8; //终端接入地点  不需要
+}
+
+//Vsim_ResAllo
+//描述：记录服务器分配VSIM资源到主板获取到VSIM资源过程中的打点信息
+//触发：副板收到分卡响应，1）分卡失败则直接输出；2）分卡成功，则在主板解析VSIM镜像文件后输出
+message Vsim_ResAllo{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 resReqTime = 2; //终端发起分卡请求的时间点单位s	未取到赋初始值 -1 
+	optional int32 resResTime = 3; //终端收到分卡响应的时间点单位s	未取到赋初始值 -1 
+	optional rpc_err_type resAlloResult = 4; //分卡结果（成功为0，失败则为实际错误码，响应超时为999）
+	optional string imsi = 5; //副板分配得到VSIM卡的IMSI号
+	optional int32 transDelay = 6;//主板从副板接收完VSIM镜像文件所耗的时长（单位:ms） 未取到赋初始值 -1
+	optional rpc_err_type decodeResult = 7;//解析结果（成功为0，失败则为实际错误码）
+}
+
+//Vsim_EstFail
+//描述：记录主板与服务器SOCKET建立过程中触发失败的打点信息
+//触发：主板发起搜网注册到主板SOCKET建立过程中触发任何失败环节时输出
+message Vsim_EstFail{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 errorTime = 2; //触发错误的时间单位s 未取到赋初始值 -1 
+	optional string imsi = 3; //错误触发的VSIM卡IMSI号
+	optional Position pos = 4; //终端接入地点 不需要
+	optional Mobile_net net = 5; //终端网络信息
+	optional Err_info err = 6; //触发失败的错误信息
+	optional uint32 vsim_ip = 7; // 主板获取的ip	未取到赋初始值 0
+	optional Net_mbr mbr = 8; // PDP ACT ACCEPT  不需要
+}
+
+//换卡的参数
+message Switch_vsim_plmn_item{
+	optional string mcc = 1;
+	optional string mnc = 2;
+	optional Net_type_e rat = 3;
+	optional int32 rssi_code = 4;
+}
+
+//Vsim_ResReallo
+//描述：记录主板与服务器换卡的打点信息
+//触发：主板收到服务器的换卡响应或者换卡流程定时器超时输出
+message Vsim_ResReallo{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 resRealloReqTime = 2; //终端发起换卡请求的时间，单位s	未取到赋初始值 -1 
+	optional int32 resRealloResTime = 3; //终端收到换卡响应的时间，单位s 	未取到赋初始值 -1 
+	optional uint32 resRealloSN = 4; //同一次接入过程中的换卡序号
+	optional Err_info err = 5; //触发换卡请求的错误消息
+	optional rpc_err_type resRealloResult = 6; //换卡结果（成功为0，失败则为实际错误码，响应超时为999）
+	optional string oldImsi = 7; //重分配前的老VSIM卡IMSI号
+	optional string newImsi = 8; //重分配前的新VSIM卡IMSI号（换卡失败或者响应超时则为空）
+	optional Mobile_net net = 9; //终端网络信息
+	optional Position pos = 10; //终端接入地点 不需要
+	repeated Switch_vsim_plmn_item switch_param = 11;// 换卡时的参数
+}
+
+
+//上下行传输信道类型（只考虑RB SETUP，不考虑RB RECFG）
+enum Trans_channel_type_e {
+    CHANNEL_TYPE_INVALID = 0;
+    CHANNEL_TYPE_DCH = 1;
+}
+
+message Trans_channel{
+	//optional Trans_channel_type_e chl_type = 1;
+	optional int64 chl_up_mbr = 2;  // 单位bps 未取到赋初始值 -1 
+	optional int64 chl_down_mbr = 3;	// 单位bps 未取到赋初始值 -1 
+	optional Net_ability ability = 4; // 业务能力
+}
+
+
+//Vsim_EstSucc
+//描述：记录主板与服务器SOCKET建立成功的打点信息
+//触发：主板SOCKET建立成功时输出
+message Vsim_EstSucc{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 succTime = 2; //主板SOCKET建立成功的时间 单位s	未取到赋初始值 -1 
+	optional string imsi = 3; //接入的VSIM卡IMSI号
+	optional Position pos = 4; //终端接入地点 不需要
+	optional Mobile_net net = 5; //终端网络信息
+	optional Trans_channel tr_chl = 6; //上下行传输信道 不需要
+	optional uint32 vsim_ip = 7; // 主板获取的ip
+}
+
+enum InterHoType_E {
+    INTER_HO_TYPE_INVALID = 0;
+    INTER_HO_TYPE_2G_TO_3G = 1;
+    INTER_HO_TYPE_2G_TO_4G = 2;
+    INTER_HO_TYPE_2G_TO_NO_SERVICE = 3;
+    INTER_HO_TYPE_3G_TO_2G = 4;
+    INTER_HO_TYPE_3G_TO_4G = 5;
+    INTER_HO_TYPE_3G_TO_NO_SERVICE = 6;
+    INTER_HO_TYPE_4G_TO_2G = 7;
+    INTER_HO_TYPE_4G_TO_3G = 8;
+    INTER_HO_TYPE_4G_TO_NO_SERVICE = 9;
+    INTER_HO_TYPE_NO_SERVICE_TO_2G = 10;
+    INTER_HO_TYPE_NO_SERVICE_TO_3G = 11;
+    INTER_HO_TYPE_NO_SERVICE_TO_4G = 12;
+}
+
+//Vsim_InterHO
+//描述：记录主板在无线侧触发异系统切换的打点信息
+//触发：终端主板触发异系统切换后输出
+message Vsim_InterHO{
+	optional Comm_head head = 1; // 共同消息
+	optional string imsi = 2; //接入的VSIM卡IMSI号
+	optional int32 triggerTime = 3; //异系统切换触发时间 单位s	未取到赋初始值 -1 
+	optional InterHoType_E interHoType = 4;//异系统切换类型（WCDMA->GSM;LET->GSM;LTE->WCDMA）
+	//uint32 rssi = 5; //终端接入网络的信号强度RSSI //终端接入网络的信号 0.2版本中删除
+	//Mobile_signal signal = 6; //终端接入网络的信号 0.2版本中删除
+	optional Position pos = 7; //终端接入地点 不需要
+	optional Mobile_net net = 8; //终端网络信息
+}
+
+
+//Vsim_RateLim
+//描述：记录主板限速事件的打点信息
+//触发：终端主板触发限速后输出
+message Vsim_RateLim{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 triggerTime = 2; //主板限速的触发时间	单位s	未取到赋初始值 -1 
+	optional int32 targetLevel= 3; //限速命令中的速率档位	未取到赋初始值 -1 
+	optional Limit_result_e LimitResult = 4; //终端限速反馈的结果（成功为0，失败则为实际错误码，超时为999）
+	optional int64 newUlRate = 5; //限速后的上行速率 单位bps 	未取到赋初始值 -1 
+	optional int64 newDlRate = 6; //限速后的下行速率 单位bps 	未取到赋初始值 -1 
+	optional Position pos = 7; //终端接入地点 不需要
+	optional Mobile_net net = 8; //终端网络信息
+	optional string vsim_imsi = 9; // 主板的imsi 
+}
+
+//Vsim_MR
+//描述：记录主板周期测量的打点信息
+//触发：终端周期测量后输出
+message Vsim_MR{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 triggerTime = 2; //触发时间		单位s	未取到赋初始值 -1 
+	optional string imsi = 3; //接入的VSIM卡IMSI号
+	optional Position pos = 4; //终端接入地点 不需要
+	//Net_cell cell = 5; // 小区  [0.2版本中注释掉，已经在Mobile_net中实现了]
+	optional Mobile_net net = 6; //终端网络信息
+	optional int32 ueTxPower = 7; //触发时UE发射功率 上报的有可能正值也有可能负值，如果未取到赋初始值 255
+}
+
+//Ter_conn_rel
+//描述：记录终端与服务器SOCKET连接释放的打点信息
+//触发：SOCKET由连接保持状态到连接断开时输出
+message Ter_conn_rel{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 errorTime = 2; //触发错误的时间 单位s	未取到赋初始值 -1 
+	optional Mobile_net net = 3; //终端网络信息
+	optional Err_info err = 4; //触发失败的错误信息
+	optional Position pos = 5; //终端接入地点 不需要
+	optional string imsi = 6;  //对应卡的imsi 
+}
+
+//Ssim_ConnRel
+//描述：记录终端与服务器SOCKET连接释放的打点信息
+//触发：副板SOCKET由连接保持状态到连接断开时输出
+
+//Vsim_ConnRel
+//描述：记录主板与服务器SOCKET连接释放的打点信息
+//触发：主板SOCKET由连接保持状态到连接断开时输出
+
+message Ter_conn_rebuild{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; //触发的时间 单位s	未取到赋初始值 -1
+	optional Mobile_net net = 3; //终端网络信息
+	optional Err_info err = 4; //触发失败的错误信息, 成功则不需要填这个
+	optional Position pos = 5; //终端接入地点 不需要
+	optional string imsi = 6; //当前卡的IMSI号，如果id是副板，则填副板imsi，否则填vsim卡的imsi
+	optional Net_mbr mbr = 7; // PDP ACT ACCEPT 不需要
+	optional uint32 ip = 8; // 拨号成功后分配的ip 未取到赋初始值 0
+	optional Net_ability ability = 9; // 业务能力 Vsim_ReEstSucc 才有这个数据
+}
+
+//Ssim_ReEstFail
+//描述：记录副板与服务器SOCKET重建过程中触发失败的打点信息
+//触发：副板与服务器连接（包括无线连接和SOCKET）断开后重建过程中触发的任何失败环节时输出
+
+
+//Vsim_ReEstFail
+//描述：记录主板与服务器SOCKET重建过程总触发失败的打点信息
+//触发：主板与服务器连接（包括无线连接和SOCKET）断开后重建过程中触发的任何失败环节时输出
+
+
+//Ssim_ReEstSucc
+//描述：记录副板与服务器SOCKET重建成功的打点信息
+//触发：副板与服务器连接（包括无线连接和SOCKET）断开后重建直到副板SOCKET建立成功时输出
+
+
+//Vsim_ReEstSucc
+//描述：记录主板与服务器SOCKET重建成功的打点信息
+//触发：主板与服务器连接（包括无线连接和SOCKET）断开后重建直到主板SOCKET建立成功时输出
+
+message AuthApduInfo{
+	optional int32 authApduSN = 1;//针对一次接入过程中每个鉴权APDU包进行统计，如果响应超时则为-1，最多计前4个，不足则填空；两个字段APDU序号|响应时长） 未取到赋初始值 -2 
+	optional int32 authApduRtt = 2;//针对一次接入过程中每个鉴权APDU包进行统计，如果响应超时则为-1，最多计前4个，不足则填空；两个字段APDU序号|响应时长） 未取到赋初始值 -2 
+}
+
+//Vsim_DelayStat
+//描述：记录终端接入GlocalMe服务的主要流程时延的打点信息
+//触发：主板SOCKET连接建立成功时输出
+message Vsim_DelayStat{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 ssimRegDelay = 2; //副板从搜网开始到注册网络成功的时长 	未取到赋初始值 -1 int32  单位ms
+	optional int32 ssimSocketDelay = 3;//副板与服务器之间SOCKET连接建立的时长 未取到赋初始值 -1 int32  单位ms
+	optional int32 vsimRegDelay = 4; //主板从搜网开始到注册网络成功的时长 未取到赋初始值 -1 int32  单位ms
+	optional int32 vsimSocketDelay = 5;//主板与服务器之间SOCKET连接建立的时长 未取到赋初始值 -1 int32  单位ms
+	optional int32 vsimStartRegDelay = 6; //主板取到VSIM到发起网络注册的时长 未取到赋初始值 -1 int32  单位ms
+	optional int32 vsimStartDialDelay = 7; //主板注册上网络到发起拨号的时长 未取到赋初始值 -1 int32  单位ms
+	repeated int32 loginRtt = 8; //针对一次接入过程中每个登陆包进行统计，如果响应超时则为-1，最多计前2个，不足则填空
+	repeated AuthApduInfo authApdu = 9; //针对一次接入过程中每个鉴权APDU包进行统计
+	optional int32 totalConnDelay = 10;//终端从上电开机到主板SOCKET连接建立成功的总时长 未取到赋初始值 -1 int32  单位ms
+	optional int32 firstFlowDataDelay = 11; // 终端从上电开机到上报第一个流量包的总时长 未取到赋初始值 -1 int32  单位ms
+}
+
+enum Wifi_client_ter_type{
+	WIFI_CLIENT_TER_NONE = 0;
+	WIFI_CLIENT_TER_PC = 1;
+	WIFI_CLIENT_TER_ANDROID = 2;
+	WIFI_CLIENT_TER_IOS = 3;
+}
+
+message Wifi_usr_info{
+	optional string name = 1; //用户名称
+	optional bytes mac =2; // mac地址		未取到赋初始值 0
+}
+
+//Wifi_user_change
+//描述：记录终端wifi连接数的信息 就是excel中的WIFI板事件测量（Wifi_MR）
+//触发：连接数发生变化时触发 
+message Wifi_user_change{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; // 触发时间 	未取到赋初始值 -1 int32
+	optional int32 last_user_cnt = 3; // 变化前的连接数 未取到赋初始值 -1 int32
+	optional int32 user_cnt = 4; // 当前连接数	未取到赋初始值 -1 int32
+	repeated Wifi_usr_info ter_info = 5; // 终端信息
+	optional int32 wifi_channel = 6; // 无线信道 未取到赋初始值 -1 int32
+}
+
+//Ter_power_on
+//描述：记录终端开机消息
+//触发：开机时触发
+message Ter_power_on{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 poweron_time = 2; //开机时间  未取到赋初始值 -1 int32
+	optional Sys_start_type up_type = 3; //开机类型
+	optional int32 power_left = 4; // 开机时剩余电量 百分比 未取到赋初始值 -1 int32
+	optional Position pos = 5; //终端接入地点 不需要
+}
+
+//Ter_power_off
+//描述：记录终端关机消息
+//触发：关机时触发
+message Ter_power_off{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; // 产生时间 未取到赋初始值 -1 int32
+	optional int32 online_duration = 3; // 终端从主板SOCKET建立成功到最终登出的时长 未取到赋初始值 -1 int32 单位：s
+	optional int32 powerup_duration = 4; // 开机到关机运行的总时长 未取到赋初始值 -1 int32 单位：s
+	optional Sys_start_type poweroff_type = 5; //关机类型
+	optional int32 power_left = 6; // 关机时终端的剩余电量（百分比） 未取到赋初始值 -1 int32
+	optional Position pos = 7; //终端接入地点 不需要
+	optional Mobile_net net = 8; //终端网络信息
+}
+
+//wifi工作模式
+enum Wifi_work_mode{
+	WIFI_WORK_MODE_NONE = 0;
+	WIFI_WORK_MODE_B = 1;
+	WIFI_WORK_MODE_BG = 2;
+	WIFI_WORK_MODE_BGN = 3;
+	WIFI_WORK_MODE_G_ONLY = 4;
+	WIFI_WORK_MODE_N_ONLY = 5;
+}
+
+// wifi加密模式
+enum Wifi_encrypt_type{
+	WIFI_ENCRYTP_TYPE_NONE = 0;
+	WIFI_ENCRYTP_TYPE_WPA_PSK = 1;
+	WIFI_ENCRYTP_TYPE_WPA2_PSK = 2;
+}
+
+//Ter_wifi_on
+//描述：记录wifi打开时的信息
+//触发：wifi打开时
+message Ter_wifi_on{
+	optional Comm_head head = 1; // 共同消息
+	optional uint32 occur_time = 2; // 产生时间
+	optional Wifi_work_mode work_mode = 3; // 工作模式
+	optional uint32 wifi_channel = 4; // 无线信道
+	optional bool ssid_broadcast = 5; // 是否开启ssid广播
+	optional string ssid = 6; // ssid
+	optional string passwd = 7; // wifi密码
+	optional Wifi_encrypt_type encrypt = 8; // 加密模式
+}
+
+//  wifi关闭原因
+enum Wifi_off_reason{
+	WIFI_OFF_REASON_NONE = 0; 
+	WIFI_OFF_REASON_LOW_POWER = 1; // 低电量关闭
+	WIFI_OFF_REASON_MANUAL = 2; // 手动关闭
+	WIFI_OFF_REASON_SYSTEM = 3; // 系统自动关闭
+}
+
+message Ter_wifi_off{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; // 产生时间 未取到赋初始值 -1 int32
+	optional int32 wifi_work_duration = 3; // wifi工作时长 未取到赋初始值 -1 int32  单位：s
+	optional Wifi_off_reason reason = 4; // 关闭原因
+	optional int32 power_left = 5; // 剩余电量,百分比 未取到赋初始值 -1 int32
+}
+
+
+//终端接入异常事件，经过一段时间后终端还是无法正常接入，(终端开机到6min超时后还未触发用户业务第一个流量包上报)
+//时间间隔可以配置 默认6分钟
+message Ter_access_abnormalA{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; // 产生时间  未取到赋初始值 -1 int32
+	optional bool wifi_on = 3; // wifa是否打开
+	optional int32 wifi_client_count = 4; // wifi连接数  未取到赋初始值 -1 int32
+	optional Position pos = 5; //终端接入地点 不需要
+	optional Mobile_net net = 6; //终端网络信息 副板
+	optional Err_info last_err = 7; // 最近一次错误信息
+	optional int32 ssim_lac_change_times = 8; // 副板所在网络LAC变更次数 未取到赋初始值 -1 int32
+	optional int32 ssim_cell_change_times = 9; // 副板所在网络CELL变更次数 未取到赋初始值 -1 int32
+	optional bool is_login = 10; // 是否发起登录
+}
+
+
+//接入异常事件B：终端从开机一直检测未触发用户业务第一个流量包上报，在6min超时前用户关机
+//事件触发输出日志
+message Ter_access_abnormalB{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; // 产生时间 未取到赋初始值 -1 int32
+	optional bool wifi_on = 3; // wifa是否打开
+	optional int32 wifi_client_count = 4; // wifi连接数 未取到赋初始值 -1 int32
+	optional Position pos = 5; //终端接入地点 不需要
+	optional Mobile_net net = 6; //终端网络信息  副板
+	optional Err_info last_err = 7; // 最近一次错误信息
+	optional int32 ssim_lac_change_times = 8; // 副板所在网络LAC变更次数 未取到赋初始值 -1 int32
+	optional int32 ssim_cell_change_times = 9; // 副板所在网络CELL变更次数 未取到赋初始值 -1 int32
+	optional bool is_login = 10; // 是否发起登录
+}
+
+//接入正常事件：终端从开机一直检测用户业务第一个流量包是否上报，在6min超时前已经触发
+//事件触发输出日志
+message Ter_access_normal{
+	optional Comm_head head = 1; // 共同消息
+	optional int32 occur_time = 2; // 产生时间  未取到赋初始值 -1 int32
+	optional int32 wifi_client_count = 3; // wifi连接数 未取到赋初始值 -1 int32
+	optional Position pos = 4; //终端接入地点 不需要
+	optional Mobile_net net = 5; //终端网络信息  vsim卡
+}
+
+enum Fota_upgrade_board{
+	FOTA_UPGRADE_BOARD_LOCAL = 1; // 副版
+	FOTA_UPGRADE_BOARD_HOST = 2;  // 主板
+}
+
+enum Fota_upgrade_errcode{
+	FOTA_UPGRADE_NONE = 0; // 成功
+	FOTA_UPGRADE_FAIL = 1; // 失败
+}
+
+message Fota_upg_info{
+	optional int32 start_time = 1;  // 开始时间
+	optional int32 end_time = 2;  // 结束时间
+	optional string mcc = 3;   // 国家码
+	optional Fota_upgrade_board board = 4; // 主板或者副版
+	optional string cur_software = 5;  // 当前版本号
+	optional string target_software = 6; // 目标版本号
+}
+
+// FOTA升级成功事件，升级结束后触发，包括主副版升级
+message Ter_fota_upgrade_succ{
+	optional Comm_head head = 1; // 共同消息
+	optional Fota_upg_info upg_info = 2;
+}
+
+// FOTA升级失败事件，升级结束后触发，包括主副版升级
+message Ter_fota_upgrade_fail{
+	optional Comm_head head = 1; // 共同消息
+	optional Fota_upg_info upg_info = 2;
+	optional Fota_upgrade_errcode errcode = 3; // 升级结果
+}
+
+// FOTA 下载升级包事件
+message Ter_fota_file_download{
+	optional Comm_head head = 1; // 共同消息
+	optional Fota_upg_info upg_info = 2;
+	optional int32 file_size = 3; // 升级包大小
+	optional Fota_upgrade_errcode errcode = 4; // 升级结果
+}
+
+// 语音呼入呼出事件
+message Ter_cs_phonecall{
+    optional Comm_head head = 1; // 共同消息
+    optional int32 occur_time = 2;
+    optional Mobile_net net = 3; //终端网络信息
+    optional int32 type = 4; // 0 out, 1 in
+    optional int32 duration = 5; // 通话时长
+    optional string imsi = 6; // vsim imsi
+    optional string phone_number = 7; // 来电或者去电号码
+}
+
+//软硬卡切换事件
+message Ter_soft_phy_swicth{
+	optional Comm_head head = 1;   // 共同消息
+	optional string iccid = 2;    //软种子卡的ICCID
+	optional string imsi = 3;     //软种子卡的IMSI
+	optional int32 occur_time = 4;//软硬卡切换触发时间 :秒
+	optional int32 type = 5;      //软硬卡切换标识：1.硬卡->软；2.卡软卡->硬卡
+	optional bool isSuccess = 6;  //结果：true 成功 ,false失败
+	optional int32 duration = 7;  //切换消耗时间：从开始切换到切换完成的时间(ms)
+}
+
+//终端大循环事件,触发原因都是超时
+message Ter_big_cycle{
+	optional Comm_head head = 1;   // 共同消息
+	optional int32 occur_time = 2;//大循环事件触发时间 :秒
+	optional int32 persent = 3;      //触发时终端启动云卡进度百分比
+	optional Big_cycle_statle state = 4;  //触发时终端的状态
+}
+
+enum Big_cycle_statle{
+	mParentState= 0;  // 所有状态的父状态，业务无关
+	mDefaultState= 1;  // 未登录时候的状态
+	mRunState= 2;      // 用户点击登录后的父状态
+	mRecoveryState= 3; // app异常关闭后恢复状态
+	mStartState= 4;   // 业务运行父状态
+	mInitState= 5;   // 业务正常运行父状态
+	mSeedChEstablishState= 6;  // 种子卡网络建立状态，这个状态会拉起种子卡
+	mPreloginIpCheckState= 7; // 预登陆状态，主要是做路由获取IP
+	mLoginState= 8;   // 登录状态，发送登录包
+	mInServiceState= 9;  // 登录成功状态，此时拿到此次登录的session，是登录成功后业务的父状态
+	mLogoutState= 10;    // 退出状态，发送退出登录包
+	mLogoutWaitState= 11; // 退出等待状态
+	mWaitReloginState= 12; // 等待重登陆状态，根据业务不同时间会有长短
+	mWaitResetCardState= 13;  // 等待关卡状态
+	mVsimBegin= 14;  // 云卡启动状态
+	mDispatchVsimState= 15;// 分卡状态
+	mGetVsimInfoState= 16;// 获取vsim info
+	mDownloadState= 17;// 下载云卡bin文件
+	mStartVsimState= 18; // 启动云卡状态,insert 卡, powerup, ready
+	mVsimRegState= 19;  // ready之后,等待注册状态,这个由framework处理,app只监听
+	mVsimDatacallState= 20;  // 拨号等待状态
+	mVsimEstablishedState= 21; // 拨号成功,云卡可用
+	mVsimReleaseState= 22;  //退出时需要做的处理都在这里
+	mSwitchVsimState= 23;  // 换卡状态
+	mWaitSwitchVsimState= 24; // 换卡等待状态,主要是换卡惩罚
+	mWaitResetCloudSimState= 25;  // disable云卡的时候，进入的状态，不响应除了云卡disable成功的其他所有事件
+	mPlugPullCloudSimState= 26;   // 种子卡软硬卡切换状态
+	mExceptionState= 27;      // 异常状态
+}
+
+//亮屏熄屏事件
+message Ter_screen_event {
+	optional Comm_head head = 1;   // 共同消息
+	optional int32 occur_time = 2;//触发时间 :秒
+	optional bool isScreenOn = 3; //亮屏熄屏：true- 亮屏，false-熄屏
+	optional string id =4;         //唯一标识 ，规则：8位随机数+8位递增数
+}
+
+//数据业务开关事件
+message Ter_data_event{
+	optional Comm_head head = 1;   // 共同消息
+	optional int32 occur_time = 2;//触发时间 :秒
+	optional bool isDataOn = 3;   //数据业务开关 true- 开，false-关
+	optional string id =4;         //唯一标识 ，规则：8位随机数+8位递增数
+}
+
+//性能日志类型
+enum Perf_log_type_e{
+	PERF_LOG_TYPE_CONN_BUILD = 0;  // 连接建立类
+	PERF_LOG_TYPE_CONN_KEEP = 1;   // 连接保持
+	PERF_LOG_TYPE_CONN_RELEASE = 2; // 连接释放
+	PERF_LOG_TYPE_CONN_REBUILD = 3; // 连接重建
+	PERF_LOG_TYPE_CONN_STATISTICS = 4; // 连接统计类
+}
+
+
+//性能日志id
+enum Perf_log_id_e{
+	PERF_LOG_SSIM_CONN_FAIL = 0;			//副板与服务器连接建立失败
+	PERF_LOG_SSIM_CONN_SUCC = 1;			//副板与服务器连接建立成功
+	PERF_LOG_SSIM_LOGIN = 2;				//副板登陆服务器
+	PERF_LOG_TRANS_VSIM_FILE = 3;			//副板与主板交互VSIM镜像文件
+	PERF_LOG_VSIM_CONN_FAIL = 4;			//主板与服务器连接建立失败
+	PERF_LOG_VSIM_SWTICH = 5;				//主板换卡
+	PERF_LOG_VSIM_CONN_SUCC = 6;			//主板与服务器连接建立成功
+	PERF_LOG_VSIM_INTER_HO = 7;				//主板异系统切换
+	PERF_LOG_VSIM_RATE_LIMIT = 8;			//主板限速
+	PERF_LOG_VSIM_MR = 9;					//主板周期测量
+	PERF_LOG_SSIM_CONN_RELEASE = 10;		//副板连接释放
+	PERF_LOG_VSIM_CONN_RELEASE = 11;		//主板连接释放
+	PERF_LOG_SSIM_CONN_REBUILD_FAIL = 12;	//副板与服务器连接重建失败
+	PERF_LOG_SSIM_CONN_REBUILD_SUCC = 13;	//副板与服务器连接重建成功
+	PERF_LOG_VSIM_CONN_REBUILD_FAIL = 14;   //主板与服务器连接重建失败
+	PERF_LOG_VSIM_CONN_REBUILD_SUCC = 15;   //主板与服务器连接重建成功
+	PERF_LOG_CONN_DELAY = 16;               //连接时延统计
+	PERF_LOG_WIFI_USER_CHANGE = 17; 		//wifi用户数变化统计
+	PERF_LOG_TER_POWER_ON = 18; 			//终端开机
+	PERF_LOG_TER_POWER_OFF = 19;			//终端关机
+	PERF_LOG_TER_WIFI_ON = 20;				//开启wifi
+	PERF_LOG_TER_WIFI_OFF = 21; 			//关闭wifi
+	PERF_LOG_ACCESS_ABNORMAL_A = 22;		//接入异常 A 
+	PERF_LOG_ACCESS_ABNORMAL_B = 23;		//接入异常 B 
+	PERF_LOG_ACCESS_NORMAL = 24; 			// 接入正常
+	PERF_LOG_FOTA_UPGRADE_SUCC = 25;				//FOTA升级成功
+	PERF_LOG_FOTA_UPGRADE_FAIL = 26;				//FOTA升级失败
+	PERF_LOG_FOTA_DOWNLOAD_FILE = 27;		//FOTA下载升级包事件
+	PERF_LOG_CS_PHONECALL = 28;        // 语音呼入呼出事件
+	PERF_LOG_TER_SOFT_PHY_SWICTH = 29;//软硬卡切换事件
+	PERF_LOG_TER_BIG_CYCLE = 30;//终端大循环事件
+	PERF_LOG_TER_SCREEN_EVENT  =31; //亮屏熄屏事件
+	PERF_LOG_TER_DATA_EVENT  =32; //数据业务开关事件
+}
+
+message Ter_perf_log{
+	optional Perf_log_id_e logid = 1; // 日志id
+	optional uint32 upload_time = 2; // 上传时间
+	optional uint32 seq_id = 3; //序列号ID
+	optional Ssim_EstFail ssim_conn_fail = 11;//副板与服务器连接建立失败，种子卡的一些异常
+	optional Ssim_EstSucc ssim_conn_succ = 12;//副板与服务器连接建立成功
+	optional Ssim_Login ssim_login = 13;//副板登陆服务器
+	optional Vsim_ResAllo vsim_trans_file = 14;//副板与主板交互VSIM镜像文件
+	optional Vsim_EstFail vsim_conn_fail = 15;//主板与服务器连接建立失败
+	optional Vsim_EstSucc vsim_conn_succ = 17;//主板与服务器连接建立成功
+	optional Ter_access_abnormalA access_ab_a = 33; // 终端接入异常A
+	optional Ter_access_abnormalB access_ab_b = 34; // 终端接入异常B
+	optional Ter_access_normal access_normal = 35; // 终端接入正常
+	optional Vsim_DelayStat vsim_delay = 27;//连接时延统计
+
+	optional Ter_conn_rel vsim_rel = 22;//主板连接释放
+	optional Ter_power_on poweron = 29; // 开机
+	optional Vsim_InterHO vsim_ho = 18;//主板异系统切换
+	optional Vsim_MR vsim_mr = 20;//主板周期测量 6分钟（可配置） 报一次 vsim
+
+	optional Ter_power_off poweroff = 30; // 关机
+	optional Wifi_user_change user_change = 28; // wifi用户数变化
+
+	optional Ter_fota_upgrade_succ fota_upgrade_succ = 36; // fota升级成功       ,未实现，需要fota app 那边统计
+	optional Ter_fota_upgrade_fail fota_upgrade_fail = 37; // fota升级失败       ,未实现，需要fota app 那边统计
+	optional Ter_fota_file_download fota_file_download = 38; // fota下载升级文件  ,未实现，需要fota app 那边统计
+
+	optional Ter_soft_phy_swicth soft_phy_switch = 40; //软硬卡切换事件
+	optional Ter_big_cycle big_cycle =41; //终端大循环事件
+	optional Ter_screen_event screen_event =42; //亮屏熄屏事件
+	optional Ter_data_event data_event =43; //数据业务开关事件
+
+	//不报
+	optional Vsim_ResReallo vsim_swtich = 16;   //主板换卡
+	optional Vsim_RateLim vsim_rate_limit = 19;          //主板限速
+	optional Ter_conn_rel ssim_rel = 21;//副板连接释放
+	optional Ter_conn_rebuild ssim_rebuild_fail = 23;//副板与服务器连接重建失败
+	optional Ter_conn_rebuild ssim_rebuild_succ = 24;//副板与服务器连接重建成功
+	optional Ter_conn_rebuild vsim_rebuild_fail = 25;//主板与服务器连接重建失败
+	optional Ter_conn_rebuild vsim_rebuild_succ = 26;//主板与服务器连接重建成功
+	optional Ter_wifi_on wifi_on = 31; // 开启wifi
+	optional Ter_wifi_off wifi_off = 32; // 关闭wifi
+	optional Ter_cs_phonecall cs_phonecall = 39; // 接打电话事件
+}

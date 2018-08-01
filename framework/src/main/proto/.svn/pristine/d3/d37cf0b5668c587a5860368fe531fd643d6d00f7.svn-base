@@ -1,0 +1,28 @@
+
+//公共文件
+
+syntax = "proto2";
+
+message PlmnInfo {
+	required string plmn = 1;   // PLMN（Public Land Mobile Network），公共陆地移动网络
+	//0:CDMA;1:HDR;2:GSM;3:WCDMA;4:LTE;5:TDS
+	optional uint32  rat  = 2;   // rat（Radio Access Type），无线接入类型 2g 3g
+	optional uint32  rssi=  3;   // rssi信号强度
+	optional uint32  band = 4 ;// 网络频段
+}
+
+message file_opt_config_param{
+	optional string auto_cfg = 1;
+	optional string manual_cfg = 2;//同时可用于LOG_CONTROL_MANUAL_START参数
+	optional uint32 action = 3;//3bit mask,bit 1:7分钟副板掉网不恢复；bit2: 开机注不上网；bit 3：频繁掉网事件
+	optional uint32 fon_fre = 4;
+	optional uint32 fon_time = 5;
+	optional uint32	total_size = 6;
+	optional uint32 file_size = 7;
+}
+
+enum Gps_switch_state 
+{
+	SWITCH_OFF = 0;
+	SWITCH_ON = 1;
+}

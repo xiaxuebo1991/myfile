@@ -1,0 +1,28 @@
+dependencies {
+
+    //    compile 'com.google.protobuf:protobuf-java:3.0.0-beta-2'
+    //    compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-5'
+    // https://mvnrepository.com/artifact/io.netty/netty-all
+    //    compile group: 'io.netty', name: 'netty-all', version: '4.1.1.Final'
+    // https://mvnrepository.com/artifact/io.netty/netty-transport
+    compile 'io.netty:netty-transport:4.1.2.Final'
+    //compile 'io.netty:netty-handler:4.1.2.Final'
+    //    compile 'com.google.protobuf:protobuf-java:2.6.1'
+    //wire to replace google protobuf
+    compile 'com.squareup.wire:wire-runtime:2.2.0'
+    compile 'org.apache.avro:avro:1.7.7'
+    //    compile 'com.google.guava:guava:19.0'
+    //    compile 'org.reflections:reflections:0.9.10'
+    compile 'io.reactivex:rxandroid:1.2.0'
+    compile 'io.reactivex:rxjava:1.1.6'
+    compile 'io.reactivex:rxkotlin:0.60.0'
+    //    compile 'com.hwangjr.rxbus:rxbus:1.0.3'
+    compile 'com.squareup.okio:okio:1.8.0'
+    compile 'commons-net:commons-net:20030805.205232'
+    compile 'com.google.code.gson:gson:2.4'
+    //    compile 'com.koushikdutta.async:androidasync:2.1.8'
+    //    compile 'com.birbit:android-priority-jobqueue:2.+'
+    //    testCompile 'junit:junit:4.12'
+    //    testCompile 'org.mockito:mockito-all:2.+'
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+}

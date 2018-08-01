@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+    >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="vertical"
+        android:clickable="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Choose account>>"
+                android:textColor="#000"
+                android:textSize="18sp"/>
+
+            <Spinner
+                android:id="@+id/accountSelect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:spinnerMode="dropdown"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+        <TextView
+            android:id="@+id/title_tv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="16dp"
+            android:text="CloudSim "/>
+        <LinearLayout
+            android:id="@+id/user_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:orientation="vertical">
+
+            <CheckBox
+                android:visibility="gone"
+                android:clickable="false"
+                android:checked="true"
+                android:id="@+id/check_isUse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="使用自定义账户"/>
+
+            <EditText
+                android:id="@+id/username"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="User Name"/>
+
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"/>
+
+
+
+            <TextView
+                android:id="@+id/sysPersent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:text=""/>
+            <TextView
+                android:id="@+id/seedPersent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:text=""/>
+            <TextView
+                android:id="@+id/systemError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:text=""/>
+            <TextView
+                android:id="@+id/seedError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:text=""/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="MODE>>"
+                android:textColor="#000"
+                android:textSize="18sp"
+                />
+
+            <RadioGroup
+                android:id="@+id/apduModeSelect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+
+                <RadioButton
+                    android:id="@+id/softMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="soft mode"
+                    />
+
+                <RadioButton
+                    android:id="@+id/phyMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    
+                    android:text="Phy mode"
+                    />
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="slot   mode>>"
+                android:textColor="#000"
+                android:textSize="18sp"
+                />
+
+            <RadioGroup
+                android:id="@+id/slotModeSelect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+
+                <RadioButton
+                    android:id="@+id/AVMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+
+                    android:text="①phy②CSIM"
+                    />
+
+                <RadioButton
+                    android:id="@+id/VAMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="①CSIM②phy"/>
+
+            </RadioGroup>
+        </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            
+            android:background="@drawable/btn_start"
+            android:id="@+id/btn_init"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_weight="1"
+            android:onClick="onInit"
+            android:textSize="20sp"
+            
+            android:textColor="#fff"
+            android:text="Start"
+            />
+        <Button
+            android:id="@+id/btn_reset"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_weight="1"
+            android:textSize="20sp"
+            android:onClick="onReset"
+            android:text="Stop"
+            />
+        
+        </LinearLayout>
+        
+
+        <Button
+            android:visibility="gone"
+            android:id="@+id/btn_switchcloudsim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onSwitchCloudsim"
+            android:text="Switch Cloudsim"
+            />
+
+
+
+        <LinearLayout
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_ncsitest"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onNcsiTest"
+                android:text="NcsiTest"
+                />
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_statsteststart"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onStatsStart"
+                android:text="Stats-Start"
+                />
+
+            <Button
+                android:id="@+id/btn_statsstop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onStatsStop"
+                android:text="Stats-Stop"
+                />
+
+            <Button
+                android:id="@+id/btn_statspause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onStatsPause"
+                android:text="Stats-Pause"
+                />
+
+            <Button
+                android:id="@+id/btn_statsresume"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onStatsResume"
+                android:text="StatsResume"
+                />
+
+            <Button
+                android:id="@+id/btn_statsget"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onStatsGet"
+                android:text="Stats-Get"
+                />
+        </LinearLayout>
+
+        
+
+        <LinearLayout
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+
+                android:id="@+id/btn_loadmbn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onLoadMBN"
+                android:text="LoadMBN"
+                />
+
+            <Button
+
+                android:id="@+id/btn_exitloadmbn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onExitLoadMBN"
+                android:text="Exit LoadMBN"
+                />
+
+        </LinearLayout>
+
+        <CheckBox
+            android:visibility="invisible"
+            android:id="@+id/debugServer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onSelectASSServer"
+            android:text="DEBUG ASS SERVER"/>
+
+        <CheckBox
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QXDM LOG"
+            android:id="@+id/qxdmLog"
+            android:checked="true"
+            android:onClick="onQxdmlogClick" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CLEAN QXLOG ZIP"
+                android:id="@+id/qxdmclean"
+                android:onClick="onQxdmlogCleanZip" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="UPLOAD LOGS"
+                android:id="@+id/uploadlogs"
+                android:layout_marginLeft="90dp"
+                android:onClick="onStartUploadLogs" />
+        </LinearLayout>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RPLMN TEST"
+            android:id="@+id/debugRplmn"
+            android:checked="false"
+            android:onClick="onSelectRPLMNTest"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>

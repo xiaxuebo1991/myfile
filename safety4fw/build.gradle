@@ -1,0 +1,70 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 23
+//    buildToolsVersion "23.0.3"
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        sprd {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+//apply from: rootProject.getRootDir().getAbsolutePath() + "/framework_common_config.gradle"
+
+repositories {
+    flatDir {
+        dirs 'provided_libs'
+    }
+}
+
+dependencies {
+//    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+
+    provided files("provided_libs/framework-release-${FwJarVersion}.jar")
+//    provided "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+//    compile files('libs/okio-1.8.0.jar')
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-runtime:$kotlin_version"
+
+    compile 'io.netty:netty-transport:4.1.2.Final'
+    compile 'com.squareup.wire:wire-runtime:2.2.0'
+    compile 'org.apache.avro:avro:1.7.7'
+    compile 'io.reactivex:rxandroid:1.2.0'
+    compile 'io.reactivex:rxjava:1.1.6'
+    compile 'io.reactivex:rxkotlin:0.60.0'
+    compile 'com.squareup.okio:okio:1.8.0'
+    compile 'commons-net:commons-net:3.3'
+    compile 'com.google.code.gson:gson:2.4'
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+/*
+    embedded 'io.netty:netty-transport:4.1.2.Final'
+    embedded 'com.squareup.wire:wire-runtime:2.2.0'
+    embedded 'org.apache.avro:avro:1.7.7'
+    embedded 'io.reactivex:rxandroid:1.2.0'
+    embedded 'io.reactivex:rxjava:1.1.6'
+    embedded 'io.reactivex:rxkotlin:0.60.0'
+    embedded 'com.squareup.okio:okio:1.8.0'
+    embedded 'commons-net:commons-net:20030805.205232'
+    embedded 'com.google.code.gson:gson:2.4'
+    embedded 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+    embedded "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    embedded "org.jetbrains.kotlin:kotlin-runtime:$kotlin_version"*/
+}

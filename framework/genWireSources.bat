@@ -1,0 +1,1 @@
+java -jar wire-compiler-2.2.0-jar-with-dependencies.jar --proto_path=src/main/proto --java_out=build\generated\source\proto\debug\java\

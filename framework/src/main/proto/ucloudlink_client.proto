@@ -1,0 +1,79 @@
+/*
+ * UIM Remote Client Interface definition
+ *
+ * Copyright (c) 2014 Qualcomm Technologies, Inc.  All Rights Reserved.
+ * Qualcomm Technologies Proprietary and Confidential.
+ *
+ * This proto file describes the interface between RIL and UIM Remote Client
+ * service for accessing the remote UIM card
+ */
+
+package com.ucloudlink.framework.ucloudsocket;
+//import uim_remote_client.proto;
+/* Each Remote UIM message stream shall be prepended with a MessageTag */
+/* Message Tag */
+message MessageTag {
+          required MessageType type    = 1;
+          required MessageId   id      = 2;
+          optional Error       error   = 3;
+          optional fixed32     token   = 4;
+          optional bytes       payload = 5;
+}
+
+enum MessageType {
+        UCLOUDLINK_MSG_UNKNOWN = 0;
+        UCLOUDLINK_MSG_REQUEST = 1;
+        UCLOUDLINK_MSG_RESPONSE = 2;
+        UCLOUDLINK_MSG_INDICATION = 3;
+}
+
+enum MessageId {
+        UNKNOWN_REQ = 0;
+
+        //
+        // For MessageType: UCLOUDLINK_MSG_REQUEST, MsgId: UCLOUDLINK_EVENT, Error: UCLOUDLINK_ERR_UNUSED,
+        //              Payload: message UcloudServiceEventReq
+        // For MessageType: UCLOUDLINK_MSG_RESPONSE, MsgId: UCLOUDLINK_EVENT, Error: Valid error code,
+        //              Payload: message UcloudServiceEventResp
+        //
+        UCLOUDLINK_EVENT = 1;
+     }
+
+    enum Error {
+            UCLOUDLINK_ERR_SUCCESS = 0;
+            UCLOUDLINK_ERR_GENERIC_FAILURE = 1;
+            UCLOUDLINK_ERR_NOT_SUPPORTED = 2;
+            UCLOUDLINK_ERR_INVALID_PARAMETER = 3;
+    }
+
+message UcloudServiceEventReq {
+     enum Event {
+        UCLOUDLINK_REQUEST_EVENT_GET_MCFG_STATUS = 0;
+    }
+    enum ErrorCause {
+        UCLOUDLINK_ERROR_CAUSE_UNKNOWN = 0;
+    }
+
+    required Event event = 1;
+    /* Present for status = 2 */
+    optional bytes eventByte = 2;
+    optional int32 subEvent = 3;
+    optional string subEventString = 4;
+    /* Present for status = UCLOUDLINK_ERROR_CAUSE_UNKNOWN */
+    optional ErrorCause error_code = 5;
+    optional int32 eventTimeout = 6;
+}
+
+message UcloudServiceEventResp {
+     enum Status {
+        UCLOUDLINK_SUCCESS = 0;
+        UCLOUDLINK_FAILURE = 1;
+    }
+    required Status response = 1;
+}
+
+message UcloudServiceEventInd {
+    /* MDOEM ind to APP */
+    required bytes modemCommand = 1;
+}
+

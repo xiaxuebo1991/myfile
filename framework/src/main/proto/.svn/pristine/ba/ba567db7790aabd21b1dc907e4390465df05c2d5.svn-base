@@ -1,0 +1,423 @@
+//  终端与服务器之间的交互 详细协议，主要用于解析S2C和C2S
+//  time: 2016-05-11
+syntax = "proto2";
+
+import "common.proto";
+
+
+
+//**********设置访问vsim模式**********//
+enum Vsim_visit_mode{
+	VSIM_VISIT_ENABLE_LOCAL_VSIM_BIN = 0;
+	VSIM_VISIT_DISABLE_LOCAL_VSIM_BIN = 1; // 进入透传模式
+	VSIM_VISIT_DELETE_LOCAL_VSIM_BIN = 2; // 删除vsimbin文件
+	VSIM_VISIT_USED_VSIM10_SCHEME = 3; // 使用VSIM1.0方案(断电不保存)
+	VSIM_VISIT_USED_VSIM20_SCHEME = 4; // 使用VSIM2.0方案(断电不保存)
+	VSIM_VISIT_USED_VSIM10_SCHEME_FOREVER = 5; // 使用VSIM1.0方案(断电保存)
+	VSIM_VISIT_USED_VSIM20_SCHEME_FOREVER = 6; // 使用VSIM2.0方案(断电保存)
+	VSIM_VISIT_DELETE_COM_VSIM_BIN = 7; // 删除本地公共文件
+}
+
+message S2c_set_vsim_visit_mode{
+	required Vsim_visit_mode visit_mode = 1;
+}
+//**********重启主板并重新登录**********//
+
+message S2c_reset_host_and_relogin{
+	optional uint32 param = 1; 
+}
+
+//**********流量预警**********//  修改为两个变量 
+message S2c_waring_flow{
+	required uint32 alarm_type = 1;//,流量阀值告警；2余额阀值告警
+	required uint32 value = 2;
+}
+//**********强制退出**********//
+
+enum Ter_quit_force_type{
+	TER_QUIT_FORCE_NEED_QUIT = 1; // 帐户在其它地方登陆，终端要执行退出登陆操作；
+	TER_QUIT_FORCE_NO_NEED_QUIT = 2; // 帐户在其它地方登陆，终端无需执行退出登陆操作，服务器端立即释放相关资源； 
+}
+
+message S2c_quit_force{
+	required Ter_quit_force_type force_type = 1;
+}
+//**********换卡**********//
+enum Ter_switch_vsim_reason{
+	TER_SWITCH_VSIM_SERVER_REQ = 100; // 服务器要求换卡，避免和终端原因一样
+}
+
+message S2c_switch_vsim{
+	required Ter_switch_vsim_reason  reason = 1; // 换卡原因
+	optional int32 subReason =2;
+}
+
+
+
+//*******************************LOG文件操作 cmd*******************************//
+
+enum Log_opt_control_type{
+	LOG_CONTROL_AUTO_SWITCH_ON = 0;
+	LOG_CONTROL_AUTO_SWITCH_OFF = 1;
+	LOG_CONTROL_MANUAL_START = 2;
+	LOG_CONTROL_MANUAL_STOP = 3;
+	LOG_CONTROL_UPDATE_CONFIG = 4;
+	LOG_CONTROL_QUERY_CONFIG = 5;
+	LOG_CONTROL_DOWNLOAD_CONFIG = 6;
+	LOG_CONTROL_UPLOAD_AND_DELETE = 7;//上传并删除日志
+	LOG_CONTROL_UPLOAD_ONLY = 8;//上传日志
+	LOG_CONTROL_DELETE_ONLY = 9;//删除日志
+}
+
+enum Log_opt_file_board_type{
+	LOG_OPT_HOST_FILE = 0;//主板日志
+	LOG_OPT_LOCAL_FILE = 1;//副板日志
+	LOG_OPT_HOST_AND_LOCAL_FILE = 2;//主副板
+	LOG_OPT_FILE = 3;//不区分主副板的日志
+}
+
+enum Log_opt_file_type{
+	LOG_TYPE_UC = 0;//
+	LOG_TYPE_RADIO = 1;
+	LOG_TYPE_QXDM = 2;
+	LOG_TYPE_FOTA = 3;
+	LOG_TYPE_COMMON = 4;
+}
+
+enum Log_opt_channel_type{
+	LOG_OPT_CHANNEL_HOST = 1;//主板
+	LOG_OPT_CHANNEL_LOCAL = 2;//副板
+}
+
+enum Log_opt_protocol_type{
+	LOG_OPT_PROTOCOL_TYPE_FTP = 0;
+	LOG_OPT_PROTOCOL_TYPE_HTTP = 1;
+}
+
+//上传日志参数：
+//开始时间，结束时间，ftp ip地址，路径，用户名，密码
+//Default：,,gdcl@223.197.68.225,/,gdcl,Gdcl@Ucloud=2014
+//时间格式:YYYY-MM-DD HH:MM:SS
+message log_opt_upload_info{
+	optional string start_time = 1;
+	optional string end_time = 2;
+	repeated string tags = 3;//e.g uC_MainServer/uC_Rild/自定义
+	optional string level  = 4;//L/H/E/F
+	optional string mode = 5;//q:快速/s:慢速/a:全取/m:值过滤不上传/c:清除
+	optional string server_addr = 6;//e.g: glocalme.com or xxx.xxx.xxx.xxx
+	optional uint32 server_port = 7;
+	optional string path = 8;
+	optional string username = 9;
+	optional string password = 10;
+	optional string file_path_name = 11;
+}
+
+// QXDM配置参数说明如下：
+//Auto_cfg, Manual_cfg,Action, Fon_fre,Fon_time,Total_size,File_size
+//Auto_cfg：自动抓LOG使用的配置文件名称；
+//Manual_cfg:手动抓LOG使用的配置文件名称；
+//Action：使能抓副板掉网不恢复，开机注不上网，频繁掉网事件的qxdm日志。
+//Fon_fre:频繁掉网的次数，
+//Fon_time：频繁掉网的检测时间段，单位为ms
+//Total_size：保存异常副板qxdm日志文件总的大小，单位为字节，
+//File_size：抓副板qxdm日志时，qxdm日志的文件大小，单位为Mb
+//Default：system_qxdm_config_001.cfg,system_qxdm_config_001.cfg,
+//7,12,600,314572800,50
+
+
+
+
+message S2c_upload_log_file {
+	required Log_opt_control_type control = 1; // 操作选项
+	required Log_opt_file_board_type file_board = 2; // 主副板日志选项
+	required Log_opt_file_type file_type = 3;//日志类型选项
+	optional Log_opt_channel_type channel_opt = 4; // 通道选项
+	optional Log_opt_protocol_type protocol = 5;
+	optional log_opt_upload_info upload_info = 6;
+	optional file_opt_config_param config_param = 7;
+}
+
+
+//*******************************RTT工作模式设置 cmd*******************************//
+// 注：RTT指令设置只在下一次重启之后生效，
+// 而且只生效一次，第三次重启之后会失效。
+
+enum Rtt_workmode_board{
+	RTT_WORKMODE_TO_HOST = 0; // 设置主板工作模式
+	RTT_WORKMODE_TO_LOCAL = 1; // 设置主板工作模式
+}
+
+enum Rtt_workmode_type{
+	RTT_WORKMODE_TYPE_2GONLY = 0; // 2G only
+	RTT_WORKMODE_TYPE_3GONLY = 1; // 3G only
+	RTT_WORKMODE_TYPE_4GONLY = 2; // 4G only
+	RTT_WORKMODE_TYPE_3GPRIOR = 3; // 3G优先
+	RTT_WORKMODE_TYPE_4GPRIOR = 4; //  4G 优先
+	RTT_WORKMODE_TYPE_3G4GPRIOR = 5; // 3G/4G 优先
+}
+
+enum Rtt_fq_band_type{
+	RTT_FQ_BAND_FULL = 0; // 全频段
+	RTT_FQ_BAND_RETAIN = 1; // 暂时保留，后续扩展
+}
+
+message S2c_rtt_work_mode_set{
+	required Rtt_workmode_board  board_type = 1;
+	required Rtt_workmode_type work_mode = 2; // 模式选择 TODO： 需要给出具体的枚举值
+	required Rtt_fq_band_type bands = 3; // 频段   TODO：需要给出具体的枚举值
+}
+
+//*******************************限速 cmd*******************************//
+
+enum Limit_speed_ctrl{
+	LIMIT_SPEED_CTRL_GET_QOS = 0; // 读取终端qos配置
+	LIMIT_SPEED_CTRL_SET_QOS = 1; // 设置终端qos
+	LIMIT_SPEED_CTRL_CLEAR_QOS = 2; // 清除限速配置，关闭限速
+}
+
+message S2c_limit_up_down_speed{
+	required string flow_id = 1;	//流水号
+	required Limit_speed_ctrl ctrl = 2;
+	required uint32 up_speed = 3; // 上行速率限制单位 kbps，0表示解除限制
+	required uint32 down_speed = 4; // 下行速率限制，单位 kbps，0表示解除限制
+	required uint32 if_display = 5;//是否显示限速  1显示，0不显示
+	required uint32 cmd_source = 6;//命令源//1:OCS;2:CSS;3:OSS
+	required uint32 priority_level = 7;//限速优先级 
+}
+//限速命令priority_level字段说明：
+
+//1、值越大，限速优先级越高。
+//2、目前初始设置为，OSS优先级最高，OCS次之，CSS最低，取值如下：CSS:1，OCS:2，OSS:3。
+//3、CSS/OCS/OSS均需要支持priority_level取值可配置。
+
+
+
+//*******************************启动3G速率检测  cmd*******************************//
+
+enum Speed_detect_type{
+	SPEED_DETECT_TYPE_STOP = 0; // 关闭测试流程
+	SPEED_DETECT_TYPE_START = 1; // 开启测试流程
+}
+
+enum Speed_detect_trig_type{
+	SPEED_DETECT_TRIG_PDP_DAIL = 1; // 表示pdp拨号触发
+	SPEED_DETECT_TRIG_POS_UPDATE = 2; // 表示位置更新触发
+	SPEED_DETECT_TRIG_PDP_OR_POS_UPDATE = 3; // 表示pdp拨号 or位置更新触发
+}
+
+// 限速开关适用范围
+enum Speed_detect_suit_area{
+	SPEED_DETECT_SUIT_COUNTRY = 0; // 表示国家
+	SPEED_DETECT_SUIT_COPS = 1; // 表示运营商
+	SPEED_DETECT_SUIT_LAC = 2; // 表示lac位置
+	SPEED_DETECT_SUIT_TER = 3; // 表示终端
+	SPEED_DETECT_SUIT_ALL = 4; // 表示全局
+}
+
+message S2c_speed_detection{
+	required Speed_detect_type detect_ctrl = 1;
+	optional Speed_detect_trig_type trig_type = 2; // 触发类型
+	optional Speed_detect_suit_area suit = 3; // 限速开关适用范围
+}
+
+
+//*******************************推送测速网址到终端  cmd*******************************//
+
+message S2c_PushSpeedDetectionUrl{
+	required uint32 sn = 1 ;//url组编号
+	required uint32 actionType = 2;//用一个字节表示：1为ping, 2为dns, 4为http 头, 8为http下载
+	repeated string urls = 3;//网址数组, 最多5个网址, 每个网址最多64个字符	
+}
+
+
+
+//******************************* 请求终端搜集网络信息 cmd*******************************//
+
+// 请求终端搜集网络信息：S2C_SEARCH_NETWORK//该命令属于3G测速部分流程
+
+enum Search_network_ctrl{
+	SEARCH_NETWORK_CTRL_STOP = 0; // 关闭搜网
+	SEARCH_NETWORK_CTRL_START = 1; // 启动搜网
+}
+
+message S2c_search_network{
+	required Search_network_ctrl ctrl = 1;
+}
+
+
+
+
+//******************************* 开启/关闭RTU  cmd*******************************//
+
+// 开启/关闭RTU
+enum Rtu_ctrl_type{
+	RTU_CTRL_TYPE_STOP = 0; // 关闭RTU，不需要携带参数
+	RTU_CTRL_TYPE_START_USE_SERVER_CFG = 1; // 开启RTU，使用下发的配置，需要携带参数
+}
+
+// 后面的optional参数，只有ctrl=RTU_CTRL_TYPE_START_USE_SERVER_CFG 才需要带
+message S2c_rtu_control{
+	required Rtu_ctrl_type ctrl = 1; // rtu控制
+	optional uint32 server_ip = 2; // rtu 服务器ip
+	optional uint32 server_port = 3; // rtu服务器端口
+	optional string rtu_usr_name = 4; // rtu终端用户名
+	optional string access_user_name = 5; // rtu终端登录到接入服务器用户名
+	optional string access_user_passwd = 6; // rtu终端登录到接入服务器密码
+}
+//******************************* 路由重定向推送  cmd*******************************//
+//路由重定向推送
+message S2c_redirect_route{
+	repeated string address = 1; // 路由地址列表	
+}
+
+
+
+
+//服务器向终端发送开启/关闭优选3G请求 
+message S2c_UpdatePlmnListRequest{
+	required uint32 update_cause =1 ;
+	required uint32 name = 2;
+	required uint32 rule = 3;
+	repeated PlmnInfo plmn_list = 4;
+}
+
+//下发系统命令（adb）
+message S2c_System_call{
+	required string system_cmd = 1;//e.g. reboot
+}
+//性能日志配置
+message S2c_perf_log_cfg{
+	required uint32 glocal_enble = 1;
+	required uint32 type_enable = 2;//bitmap
+	required uint32 upload_local = 3;//副板上传使能
+	required uint32 upload_host = 4;//主板上传使能
+	required bytes item_bitmap = 5;//每条消息占用2个bit，0:disable 1:upload by local 2:upload by local when fail 3:upload by host
+	required uint32 peri_mr_intvl = 6;//周期测量时间间隔 单位s
+	required uint32 acess_ab_timeout = 7;//接入异常超时时间
+	required uint32 host_fail_timeout = 8;//vsim 失败超时时间
+}
+//GSP功能控制
+
+enum Gps_ctrl_type
+{
+	SET_NETWORK_GPS_SWITCH = 0;
+	SET_HARD_GPS_SWITCH = 1;
+	QUERY_GPS_STATUS = 2;
+}
+
+
+message S2c_gps_func_ctrl
+{
+	required Gps_ctrl_type ctrl_type = 1;
+	optional Gps_switch_state network_gps_switch_state = 2;
+	optional Gps_switch_state hard_gps_switch_state = 3;
+}
+
+//副板优化功能开关控制
+enum Local_opt_func_ctrl
+{
+	SET_HISTORY_PLMN_SEL_SWITCH = 0;//include history attempted/available plmn sel
+}
+
+//Bit0:attampt_history_plmn_switch 1/enable;0/disable
+//Bit1:available_history_plmn_switch? 1/enable;0/disable
+message history_plmn_sel_switch_state
+{
+	required uint32 state = 1;//see above
+}
+
+message S2c_Local_opt_switch
+{
+	required Local_opt_func_ctrl opt_func = 1;
+	required history_plmn_sel_switch_state plmn_sel_switch_state = 2;
+}
+//请求终端打电话
+message S2c_RTU_Phone_Call
+{
+	required string phone_num = 1;      
+}
+
+//请求终端发送短信
+message S2c_Send_SMS
+{
+	required uint32 id = 1; 
+	required string phone_num = 2;      
+	optional string sms_value = 3;             
+}
+
+enum Remote_at_board{
+	REMOTE_AT_TO_HOST = 0; // 发送远程AT到主板
+	REMOTE_AT_TO_LOCAL = 1; // 发送远程AT到副板
+}
+
+enum Default_inside_at{
+	DEFAULT_AT_REMOTE_USER = 0; // 用户自定义,当用户选择此项时，需输入参数(用户输入AT 命令)
+	DEFAULT_AT_REMOTE_ATI = 1; // 查询终端信息
+	DEFAULT_AT_REMOTE_CSQ = 2; // 查询网络信号强度
+	DEFAULT_AT_REMOTE_COPS = 3; // 查询运营商选择状态
+	DEFAULT_AT_REMOTE_CREG = 4; // 网络注册及状态
+	DEFAULT_AT_REMOTE_HWVER = 5; // 查询硬件版本号
+	DEFAULT_AT_REMOTE_SWVER = 6; // 查询软件版本号
+	DEFAULT_AT_REMOTE_IPCALL = 7; // 查询数据业务状态
+	DEFAULT_AT_REMOTE_UIMTP = 8; // 查询UIM卡类型
+	DEFAULT_AT_REMOTE_MNCC = 9; // 查询mcc和mnc
+	DEFAULT_AT_REMOTE_CSCA = 10; // 查询短信中心号码
+	DEFAULT_AT_REMOTE_LOGIN = 11; // 查询登陆状态
+}
+
+// 远程AT
+message S2c_send_remote_at{
+	required Remote_at_board board_type = 1; // 选择主副板
+	required Default_inside_at default_at = 2; // 内置at命令
+	optional string at_str = 3; // 用户自定义at命令，当default_at = DEFAULT_AT_REMOTE_USER 使用 
+}
+
+message S2c_detail_msg_all{
+	required S2c_cmd_id cmd_id = 1;
+	optional S2c_upload_log_file log_opt = 2; //LOG文件操作
+	optional S2c_set_vsim_visit_mode vsim_visit_mode = 3; // 设置访问vsim模式
+	optional S2c_reset_host_and_relogin reset_relogin = 4; //重启主板并重新登陆
+	optional S2c_rtt_work_mode_set rtt_mode = 5; // RTT工作模式设置
+	optional S2c_limit_up_down_speed speed_limit = 6; // 限速
+	optional S2c_waring_flow waring_flow = 7; // 流量预警
+	optional S2c_quit_force quit_force = 8; // 强制退出
+	optional S2c_switch_vsim switch_vsim = 9; // 换卡
+	optional S2c_speed_detection speed_detect = 10;  // 启动3G速率检测
+	optional S2c_search_network search_network = 11;
+	optional S2c_rtu_control rtu_ctrl = 12;  // 开启/关闭RTU
+	optional S2c_redirect_route redirect_route = 13;//路由重定向
+	optional S2c_PushSpeedDetectionUrl PushSpeedDetectionUrl = 14;//推送测速网址到终端
+	optional S2c_UpdatePlmnListRequest UpdatePlmnListRequest = 15;//开启/关闭优选3G请求 
+	optional S2c_System_call system_call = 16; //下发系统命令ADB
+	optional S2c_perf_log_cfg perf_log_cfg = 17;//性能日志配置
+	optional S2c_gps_func_ctrl gps_func_ctrl = 18;//GPS功能控制
+	optional S2c_Local_opt_switch Local_opt_switch = 19;//副板优化功能开关控制
+	optional S2c_RTU_Phone_Call RTU_phone_call = 20;//请求终端打电话
+	optional S2c_Send_SMS RTU_send_sms = 21;//请求终端发短信
+	optional S2c_send_remote_at send_remote_at = 22;//远程AT
+}
+
+enum S2c_cmd_id{
+	S2C_CMD_LOG_FILE_OPT = 1; //LOG文件操作
+	S2C_CMD_SET_VSIM_VISIT_MODE = 2; // 设置访问vsim模式
+	S2C_CMD_RESET_HOST_AND_RELOGIN = 3; //重启主板并重新登陆	
+	S2C_CMD_RTT_WORK_MODE_SET = 4; // RTT工作模式设置
+	S2C_CMD_UP_DOWN_SPEED = 5; // 限速 
+	S2C_CMD_WARING_FLOW = 6; // 流量预警
+	S2C_CMD_QUIT_FORCE = 7; 	// 强制退出
+	S2C_CMD_SWITCH_VSIM = 8; // 换卡
+	S2C_CMD_SPEED_DETECTION = 9; // 启动3G速率检测
+	S2C_CMD_SEARCH_NETWORK = 10; // 请求终端搜集网络信息
+	S2C_CMD_RTU_CONTROL = 11;	// 开启/关闭RTU
+	S2C_CMD_REDIRECT_ROUTE= 12; // 路由重定向
+	s2c_CMD_PUSH_SPEED_URL = 13;//推送测速网址到终端
+	s2c_CMD_UpdatePlmnList = 14;//开启/关闭优选3G请求
+	s2c_CMD_SYSTEM_CALL = 15;//下发系统命令（ADB）
+	s2c_CMD_perf_log_cfg = 16;//性能日志配置
+	s2c_CMD_gps_func_ctrl = 17;//gpsG功能设置
+	S2c_CMD_Local_opt_switch = 18;//副板优化功能开关
+	S2c_CMD_RTU_Phone_Call = 19;//请求终端打电话
+	S2c_CMD_Send_SMS = 20;//请求终端发短信
+	S2c_CMD_send_remote_at = 21;//远程AT
+}
+

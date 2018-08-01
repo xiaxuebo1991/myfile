@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="serverip2">118.143.149.170:7001</string>
+    <string name="updateip">223.197.68.225:8089</string>
+    <string name="serverip0">223.197.68.225:7001</string>
+    <string name="region">HK</string>
+    <string name="logip">223.197.68.225:8083</string>
+    <string name="version">0.0.01</string>
+    <string name="succeedip">223.197.68.225:7001</string>
+    <string name="serverip4">52.77.162.86:7001</string>
+    <string name="serverip1">118.143.149.175:7001</string>
+    <string name="serverip3">223.197.68.228:7001</string>
+    <string name="rootip">223.197.68.225:7001</string>
+</map>

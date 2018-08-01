@@ -1,0 +1,16 @@
+apply from: rootProject.getRootDir().getAbsolutePath() + "/framework_common_config.gradle"
+
+Boolean REINFORCE_ENABLE = Boolean.parseBoolean("${project.REINFORCE_ENABLE}")
+
+if (REINFORCE_ENABLE) {
+    dependencies {
+        provided files("provided_libs/framework-release-${FwJarVersion}.jar")
+    }
+
+
+    repositories {
+        flatDir {
+            dirs 'provided_libs'
+        }
+    }
+}

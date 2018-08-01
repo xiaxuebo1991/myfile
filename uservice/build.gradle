@@ -1,0 +1,139 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+Boolean REINFORCE_ENABLE = Boolean.parseBoolean("${project.REINFORCE_ENABLE}")
+
+//非加固版本版本信息
+def Integer version_Code = 1141
+def String version_Name = "GC01_TSV2.2.001.002.180131"
+def String sp_version_Name = "GC01_TSV2.2.001.002.18013123"
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        applicationId "com.ucloudlink.uservice"
+        minSdkVersion 23
+        targetSdkVersion 23
+        versionCode "unset" == RELEASE_VERSION_CODE ? version_Code : Integer.parseInt(RELEASE_VERSION_CODE)
+        versionName ""
+        buildConfigField "Boolean", "REINFORCE_ENABLE", "" + REINFORCE_ENABLE
+
+        multiDexEnabled true
+    }
+
+
+
+    signingConfigs {
+        release {
+            storeFile file("platformre.jks")
+            storePassword "glocalme"
+
+            keyAlias "glocalme"
+            keyPassword "glocalme"
+        }
+        debug {
+            storeFile file("platformre.jks")
+            storePassword "glocalme"
+
+            keyAlias "glocalme"
+            keyPassword "glocalme"
+        }
+        sprd {
+            storeFile file("platformre.jks")
+            storePassword "glocalme"
+
+            keyAlias "glocalme"
+            keyPassword "glocalme"
+        }
+    }
+
+    buildTypes {
+        debug {
+            versionNameSuffix version_Name
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            versionNameSuffix "unset" == RELEASE_VERSION_NAME ? version_Name : RELEASE_VERSION_NAME
+        }
+        sprd {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.sprd
+            versionNameSuffix "unset" == SP_RELEASE_VERSION_NAME ? sp_version_Name : SP_RELEASE_VERSION_NAME
+        }
+    }
+    //自定义打包apk名称
+    android.applicationVariants.all { variant ->
+        try {
+            variant.outputs.each { output ->
+                output.outputFile = new File(output.outputFile.parent, buildType.versionNameSuffix + "_" + buildType.name + ".apk")
+            }
+        } catch (Exception e) {
+//            if (variant.buildType.name != "debug") {//防止AS无法安装debug包(apk)
+//                variant.getPackageApplication().outputDirectory = new File(project.rootDir.absolutePath + "/apk")
+//            }
+            variant.getPackageApplication().outputScope.apkDatas.forEach { apkData ->
+                //这个修改输出APK的文件名
+                apkData.outputFileName = "${buildType.versionNameSuffix}_${buildType.name}.apk"
+            }
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+//        exclude 'kotlin/annotation/annotation.kotlin_builtins'
+//        exclude 'kotlin/internal/internal.kotlin_builtins'
+//        exclude 'kotlin/reflect/reflect.kotlin_builtins'
+//        exclude 'kotlin/collections/collections.kotlin_builtins'
+//        exclude 'kotlin/ranges/ranges.kotlin_builtins'
+//        exclude 'kotlin/kotlin.kotlin_builtins'
+//        exclude 'META-INF/kotlin-runtime.kotlin_module'
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+if (REINFORCE_ENABLE) {
+    repositories {
+        flatDir {
+            dirs 'provided_libs'
+        }
+    }
+    dependencies {
+        provided files("provided_libs/framework-release-${FwJarVersion}.jar")
+        compile project(path: ':safety4fw')
+    }
+} else {
+    delete "${project.rootDir}/framework/src/main/assets/uc-asset0.bin"
+
+    dependencies {
+        compile project(path: ':framework')
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    //    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'junit:junit:4.12'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    //compile project(path: ':framework')
+    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.google.guava:guava:18.0'
+}
+
+apply plugin: 'kotlin-android-extensions'

@@ -1,0 +1,70 @@
+// 路由服务器
+//*************************************
+//版本信息
+//  version: v07.04.06.01
+//*************************************
+
+syntax = "proto2";
+
+// 命令码定义：
+option java_package = "com.ucloudlink.framework.protocol.protobuf";
+option java_outer_classname = "routeApi";
+option optimize_for = LITE_RUNTIME;
+enum Route_Cmd{
+	GET_ROUTE_REQ = 1001;
+	GET_ROUTE_RESP = 1002;
+	CLOSE_DEP_REQ = 1003;
+	CLOSE_DEP_RESP = 1004;
+	HEART_BEAT_REQ = 1005;
+	HEART_BEAT_RESP = 1006;
+	GET_ROUTE_REQ_ASS = 1007;
+	GET_ROUTE_RESP_ASS = 1008;
+}
+
+enum Route_Type{
+	TML = 1; // 终端路由
+	BAM= 2; // BAM路由
+}
+
+enum Response_result{
+	RESULT_SUCCE = 0;  //响应成功
+	RESULT_ERROR = 1; //响应失败
+}
+
+
+message RouteAddress{
+    required int32 type = 1 ;  //1,接入点类型，2，维护节点类型，3.ELB地址
+	repeated string address=2;
+}
+
+//查询路由信息
+message Get_Route_Req{
+	required Route_Type type = 1;// 设备类型
+	optional string	code = 2;// 终端IMEI号 BAM填写bamcode内容
+	optional string	user = 3;// 用户code
+	optional string	mcc =4;// 地区码
+	optional string	flag = 5;	//自定义路由
+}
+
+//查询路由信息响应
+message Get_Route_Resp{
+	required Response_result result = 1;
+	repeated RouteAddress routeAddress=2;
+	optional string	msg = 3;
+}
+
+//查询路由信息
+message Get_Route_Req_ASS{
+	required Route_Type type = 1;// 设备类型
+	optional string	code = 2;// 终端IMEI号 BAM填写bamcode内容
+	optional string	user = 3;// 用户code
+	optional string	mcc =4;// 地区码
+	optional string	flag = 5;	//自定义路由
+}
+
+//查询路由信息响应
+message Get_Route_Resp_ASS{
+	required Response_result result = 1;
+	repeated RouteAddress routeAddress=2;
+	optional string	msg = 4;
+}

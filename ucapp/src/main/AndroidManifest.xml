@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.ucloudlink.ucapp"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sharedUserId="android.uid.phone">
+
+    <application
+        android:name=".UCApp"
+        android:allowBackup="false"
+        android:persistent="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".InitActivity"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|keyboardHidden|screenSize|mcc|mnc">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".SoftsimActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|mcc|mnc">
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN"/>-->
+
+            <!--<category android:name="android.intent.category.DEFAULT"/>-->
+            <!--<category android:name="android.intent.category.LAUNCHER"/>-->
+            <!--</intent-filter>-->
+        </activity>
+
+        <service
+            android:name="com.ucloudlink.simservice.HomeService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.ucloudlink.cloudsim.service"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".TestReceiver">
+            <intent-filter>
+                <action android:name="com.ucloudlink.cmd.dds" />
+                <action android:name="com.ucloudlink.cmd.switchvsim" />
+                <action android:name="com.ucloudlink.cmd.phonecall.on" />
+                <action android:name="com.ucloudlink.cmd.phonecall.off" />
+                <action android:name="com.ucloudlink.cmd.relogin" />
+                <action android:name="com.ucloudlink.cmd.reconnectfail"/>
+                <action android:name="com.ucloudlink.cmd.apdufail"/>
+                <action android:name="com.ucloudlink.cmd.apduinvalid"/>
+                <action android:name="android.intent.action.ANY_DATA_STATE" />
+                <action android:name="com.ucloudlink.softsim.download.start" />
+                <action android:name="com.ucloudlink.softsim.download.stop" />
+                <action android:name="com.ucloudlink.softsim.update.start" />
+                <action android:name="com.ucloudlink.softsim.update.end" />
+                <action android:name="com.ucloudlink.softsim.update.err" />
+                <action android:name="com.ucloudlink.cmd.softsim.1" />
+                <action android:name="com.ucloudlink.cmd.softsim.2" />
+                <action android:name="com.ucloudlink.cmd.seed.start" />
+                <action android:name="com.ucloudlink.cmd.seed.stop" />
+                <action android:name="com.ucloudlink.cmd.order.new" />
+                <action android:name="com.ucloudlink.cmd.order.active" />
+                <action android:name="com.ucloudlink.cmd.order.read" />
+                <action android:name="com.ucloudlink.cmd.download.disable" />
+                <action android:name="com.ucloudlink.cmd.download.enable" />
+                <action android:name="com.ucloudlink.cmd.seed.change" />
+                <action android:name="com.ucloudlink.cmd.softsim.update" />
+                <action android:name="com.ucloudlink.cmd.softsim.flowup" />
+                <action android:name="com.ucloudlink.cmd.softsim.logout.flag" />
+                <action android:name="com.ucloudlink.cmd.softsim.logout.force" />
+                <action android:name="com.ucloudlink.cmd.flow.band.set" />
+                <action android:name="com.ucloudlink.cmd.flow.band.clear" />
+                <action android:name="com.ucloudlink.cmd.flow.permit.set" />
+                <action android:name="com.ucloudlink.cmd.flow.permit.clear" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".MainActivity">
+        </activity>
+        <activity android:name=".UploadLog"></activity>
+    </application>
+
+</manifest>

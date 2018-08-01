@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clickable="false">
+
+            <EditText
+                android:id="@+id/s_username"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="username"/>
+
+            <EditText
+                android:id="@+id/s_passwd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="password"/>
+
+            <EditText
+                android:id="@+id/s_order"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="order"/>
+
+            <Button
+                android:id="@+id/s_start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onStart"
+                android:text="start"/>
+
+            <Button
+                android:id="@+id/s_stop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onStop"
+                android:text="stop"/>
+            <Button
+                android:id="@+id/s_update"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onUpdate"
+                android:text="update"/>
+
+            <TextView
+                android:id="@+id/s_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="5"/>
+
+            <Button
+                android:id="@+id/s_changeActivity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onChangeActivity"
+                android:text="cloudsim"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

@@ -1,0 +1,91 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+Boolean REINFORCE_ENABLE = true
+
+android {
+    compileSdkVersion 23
+//    buildToolsVersion "23.0.3"
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        applicationId "com.ucloudlink.ucapp"
+        minSdkVersion 23
+        targetSdkVersion 23
+        versionCode 31
+        versionName "P2_TSV2.1.002.006.170729"
+        multiDexEnabled = true
+    }
+    signingConfigs {
+        release {
+            storeFile file("platformre.jks")
+            storePassword "glocalme"
+
+            keyAlias "glocalme"
+            keyPassword "glocalme"
+        }
+        debug {
+            storeFile file("platformre.jks")
+            storePassword "glocalme"
+
+            keyAlias "glocalme"
+            keyPassword "glocalme"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    packagingOptions {
+//        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/ASL2.0'
+//        exclude 'META-INF/LICENSE'
+//        exclude 'META-INF/LICENSE.txt'
+//        exclude 'META-INF/NOTICE.txt'
+//        exclude 'META-INF/NOTICE'
+//        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+//        jniLibs.srcDirs =['libs']
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:23.+'
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    //compile project(path: ':framework')
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile project(path: ':framework')
+//    compile 'com.android.support:multidex:1.0.0'
+    //compile project(path: ':safety4fw')
+    //provided files('provided_libs/framework-release.jar')
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}

@@ -1,0 +1,1195 @@
+//  C层(uC_WebServer)与JAVA层(GlocalMe业务APK)之间的交互协议
+///************************************
+//版本信息
+//  version: v07.05.09.01
+///************************************
+//*********************************************/
+// 为了支持 RPC 功能，需要为每个模块定义token范围uc_token_e，具体范围如下：
+// 保留  0-10000
+// WEB： 	 10001 - 20000
+// Uservice: 20001 - 30000
+// led:      30001 - 40000
+// JavaService: 40001 - 50000
+// GPS:			50001 - 60000
+// FOTA:		60001 - 70000
+// ENGPC:		70001 - 80000
+// 新增模块往后添加...
+//**********************************************/
+syntax = "proto2";
+
+option java_package = "com.ucloudlink.framework.protocol.protobuf.mifi";
+option java_outer_classname = "MifiMsgProtocol";
+option optimize_for = LITE_RUNTIME;
+
+//token范围定义
+enum uc_token_e{
+    RESERVE_MIN = 0;                             //保留token范围最小值
+    RESERVE_MAX = 10000;                         //保留token范围最大值
+    WEB_MIN = 10001;                             //WEB token范围最小值
+    WEB_MAX = 20000;                             //WEB token范围最大值
+    USERVICE_MIN = 20001;                        //Uservice token范围最小值
+    USERVICE_MAX = 30000;                        //Uservice token范围最大值
+    LED_MIN = 30001;                             //led token范围最小值
+    LED_MAX = 40000;                             //led token范围最大值
+    JAVASERVICE_MIN = 40001;                     //JavaService token范围最小值
+    JAVASERVICE_MAX = 50000;                     //JavaService token范围最大值
+    GPS_MIN = 50001;                             //GPS token范围最小值
+    GPS_MAX = 60000;                             //GPS token范围最大值
+    FOTA_MIN = 60001;                            //FOTA token范围最小值
+    FOTA_MAX = 70000;                            //FOTA token范围最大值
+    ENGPC_MIN = 70001;                           //ENGPC token范围最小值
+    ENGPC_MAX = 80000;                           //ENGPC token范围最大值
+	M2AT_MIN = 80001;							//M2AT token范围最小值
+	M2AT_MAX = 90000;							//M2AT token范围最大值
+
+}
+
+
+//消息ID在这里定义，所有的消息都定义在这里， 并且需要说明消息ID对应的message名称
+enum uc_msg_id_e{
+    //********************web请求消息ID(100~199) start**********************/
+    WEB_REQ_ACCOUNT_INFO = 100;                  //账户余额，请求值为uc_req_refresh_type类型，响应内容为uc_glome_account_info
+    WEB_REQ_LOGIN = 101;                         //登陆请求，无请求内容，不需响应
+    WEB_REQ_LOGOUT = 102;                        //退登陆，无请求内容，不需响应
+    WEB_REQ_SET_ECONOMIZE_DATA_USAGE = 103;      //节省流量开关，请求值为uc_econ_data_usage类型，不需响应
+    WEB_REQ_SET_SIM_CHANNEL = 104;               //设置SIM卡模式，请求值为uc_sim_channel类型虚拟卡，实体卡1，实体卡2，不需响应
+    WEB_REQ_APN_SETTINGS = 105;                  //设置APN，请求值为uc_apn_set，不需响应
+    WEB_REQ_RESET_FACTORY = 106;                 //恢复出厂设置，无请求内容，主要是控制led灯的闪烁，不需响应
+    WEB_REQ_UPGRADE_START = 107;                 //升级开始，无请求内容，主要是控制led灯的闪烁，不需响应
+    WEB_REQ_UPGRADE_OVER = 108;                  //升级结束，无请求内容，主要是控制led灯的闪烁，不需响应
+    WEB_REQ_ROAM_SET = 109;                      //设置漫游，请求值为uc_sim_roam类型，不需响应，不需响应
+    WEB_REQ_ADVERT_PARAMS = 110;                 //请求设备相关信息，拉取特定广告，无请求内容，响应内容为uc_glome_advert_params
+    WEB_REQ_SLEEP_WAKE_UP = 111;                 //请求睡眠唤醒，无请求内容，不需响应
+    WEB_REQ_CONFIG_WIFI = 112;                   //请求设置WiFi的SSID和密码，密码为null或者长度小于8则热点不加密，长度大于等于8则加密
+    WEB_REQ_ECONOMIZE_DATA_USAGE_STATUS = 113;   //请求节省流量开关的状态值，0为关闭/1为开启
+    //*********************web请求消息ID(100~199) end**********************/
+
+    //*************Glocalme状态消息ID(200~299)，主动上报方式 start*********/
+    GM_RSP_LOGIN_STAT = 200;                     //登陆状态，响应内容为uc_glome_login
+    GM_RSP_DATACALL_STAT = 201;                  //拨号状态，响应内容为uc_glome_datacall_state
+    GM_RSP_RADIO_TECH_STAT = 202;                //RADIO制式，响应内容为uc_radio_tech
+    GM_RSP_ACCOUNT_INFO = 203;                   //账户信息，响应内容为uc_glome_account_info
+    GM_RSP_EXCEPTION_NOTIFY = 204;               //异常Portal信息，响应内容为uc_glome_exp_info
+    GM_RSP_SIM_CHANNEL_STAT = 205;               //SIM卡状态信息，响应内容为uc_glome_sim_user_config
+    GM_RSP_OPERATOR_INFO = 206;                  //网络运营商，响应内容为uc_glome_operator_info
+    GM_RSP_RSIM_ROAM_STAT = 207;                 //实体卡漫游状态，响应内容为uc_rsim_roam
+    GM_RSP_ADVERT_PARAMS = 208;                  //广告所需设备参数，响应内容为uc_glome_advert_params
+    GM_RSP_WIFI_CLIENT_UP_DOWN_EVENT = 209;      //wifi客户端上下线事件，响应内容为uc_glome_wifi_client_up_down_event
+    GM_RSP_S2C_ADVERT_PARAMS = 210;              //服务器下发的广告配置参数，响应内容为uc_glome_s2c_advert_params
+    GM_RSP_ECONOMIZE_DATA_USAGE_STATUS = 211;    //节省流量开关的状态值，响应内容为uc_econ_data_usage
+    //**************Glocalme状态消息ID(200~299)，主动上报方式 end**********/
+
+    MSG_ID_LED_ABNORMAL = 300;   			     // uc_led_abnormal
+    MSG_ID_LED_ABNORMAL_QUERY = 301;
+    MSG_ID_LED_DATACALL = 302;
+    MSG_ID_LED_NET_TYPE = 303;
+    MSG_ID_LED_SIGNAL_INFO = 304;
+    MSG_ID_LED_POWEROFF_REQ = 305;
+    MSG_ID_LED_POWEROFF_RSP = 306;
+    MSG_ID_LED_SERVICE_START = 307;
+    MSG_ID_LED_RESET_FACTORY_START = 308;
+    MSG_ID_LED_RESET_FACTORY_OVER = 309;
+    MSG_ID_LED_UPGRADE_START = 310;
+    MSG_ID_LED_UPGRADE_OVER = 311;
+    MSG_ID_LED_MMI_TEST = 312;
+    MSG_ID_LED_KEY_MASK_SET = 313;
+    MSG_ID_LED_KEY_MASK_QUERY = 314;
+    MSG_ID_LED_KEY_MASK_RSP = 315;
+    MSG_ID_LED_RESET_KEY_EVENT = 316;
+    MSG_ID_LED_SET_FTM_MODE = 317;
+    MSG_ID_LED_WIFI_STATUS = 318;
+    MSG_ID_LED_LOCAL_RESET_FACTORY_START = 319;
+    MSG_ID_LED_LOCAL_RESET_FACTORY_SUCC = 320;
+    MSG_ID_LED_LOCAL_RESET_FACTORY_FAIL = 321;
+    MSG_ID_LED_POWEROFF_MODEM_RF_EVENT = 322;
+
+
+	// common!
+	MSG_ID_CLOUDSIM_SIGNAL_STRENGTH_LEVEL = 401;
+
+	//GPS
+	SER_GET_GPS_STATE = 501; //获取GPS状态
+	SER_SET_GPS_STATE = 502; //设置GPS状态 包括网络定位、卫星定位的开关
+	GPS_RSP_SET_STATE_RESULT = 503;  //上报设置GPS结果
+	GPS_UPLOAD_POSITION = 504;  //上报GPS定位
+
+	//FOTA
+	FOTA_UPDATE_START = 601; //fota升级开始
+	//M2AT
+	M2AT_GET_GMODE_SEND = 701;	//查询当前的工作模式
+	M2AT_GET_GMODE_RESP = 702;	//查询当前的工作模式响应
+	M2AT_SET_GMODE_SEND = 703;	//设置当前的工作模式
+	M2AT_SET_GMODE_RESP = 704;	//设置当前的工作模式响应
+	M2AT_SET_WIFI_SEND = 705;	//设置wifi名称和密码
+	M2AT_SET_WIFI_RESP = 706;	//设置wifi名称和密码响应
+	M2AT_GET_SUCFTM_SEND = 707;		//查询工厂模式
+	M2AT_GET_SUCFTM_RESP = 708;		//查询工厂模式响应
+	M2AT_SET_SUCFTM_SEND = 709;		//设置工厂模式
+	M2AT_SET_SUCFTM_RESP = 710;		//设置工厂模式响应
+	M2AT_SET_IMEIWR_SEND = 711;		//设置种子卡通道的IMEI
+	M2AT_SET_IMEIWR_RESP = 712;		//设置种子卡通道的IMEI响应
+	M2AT_SET_APN_SEND = 713;		//设置当前APN
+	M2AT_SET_APN_RESP = 714;		//设置当前APN响应
+	M2AT_GET_ROMEKY_SEND = 715;		//查询当前漫游开关
+	M2AT_GET_ROMEKY_RESP = 716;		//查询当前漫游开关响应
+	M2AT_SET_ROMEKY_SEND = 717;		//设置当前漫游开关
+	M2AT_SET_ROMEKY_RESP = 718;		//设置当前漫游开关响应
+	M2AT_RESTORE_SEND = 719;		//恢复出厂设置
+	M2AT_RESTORE_RESP = 720;		//恢复出厂设置响应
+	M2AT_LOGMODE_SEND = 721;		//设置上传LOG及IP
+	M2AT_LOGMODE_RESP = 722;		//设置上传LOG及IP响应
+	M2AT_GET_WIFICLIENT_SEND = 723;	//查询wifi热点接入人数
+	M2AT_GET_WIFICLIENT_RESP = 724;	//查询wifi热点接入人数响应
+	M2AT_GET_WIFINAME_SEND = 725;	//查询wifi热点接入客户端名称
+	M2AT_GET_WIFINAME_RESP = 726;	//查询wifi热点接入客户端名称响应
+	M2AT_GET_WIFIIP_SEND = 727;	 	//查询wifi热点接入客户端IP
+	M2AT_GET_WIFIIP_RESP = 728;		//查询wifi热点接入客户端IP响应
+	M2AT_SET_WIFIAP_SEND = 729;	 	//打开/关闭wifi热点功能
+	M2AT_SET_WIFIAP_RESP = 730;	 	//打开/关闭wifi热点功能响应
+	M2AT_GET_UCFF_SEND = 731;		//查询流量防护开关
+	M2AT_GET_UCFF_RESP = 732;		//查询流量防护开关响应
+	M2AT_SET_UCFF_SEND = 733;		//设置流量防护开关
+	M2AT_SET_UCFF_RESP = 734;		//设置流量防护开关响应
+	M2AT_GET_LOGINMODE_SEND = 735;	//查询GLOCALME业务登录模式
+	M2AT_GET_LOGINMODE_RESP = 736;	//查询GLOCALME业务登录模式响应
+	M2AT_SET_LOGINMODE_SEND = 737;	//设置GLOCALME业务登录模式
+	M2AT_SET_LOGINMODE_RESP = 738;	//设置GLOCALME业务登录模式响应
+	M2AT_GET_LOGINIP_SEND = 739;	//查询GLOCALME业务接入IP地址
+	M2AT_GET_LOGINIP_RESP = 740;	//查询GLOCALME业务接入IP地址响应
+	M2AT_SET_LOGINIP_SEND = 741;	//设置GLOCALME业务接入IP地址
+	M2AT_SET_LOGINIP_RESP = 742;	//设置GLOCALME业务接入IP地址响应
+	M2AT_GET_ACCOUNT_SEND = 743;	//查询GLOCALME业务账号用户名和密码
+	M2AT_GET_ACCOUNT_RESP = 744;	//查询GLOCALME业务账号用户名和密码响应
+	M2AT_SET_ACCOUNT_SEND = 745;	//设置GLOCALME业务账号用户名和密码
+	M2AT_SET_ACCOUNT_RESP = 746;	//设置GLOCALME业务账号用户名和密码响应
+	M2AT_GET_PKG_SEND = 747;		//查询当前GLOCALME业务套餐模式及名称
+	M2AT_GET_PKG_RESP = 748;		//查询当前GLOCALME业务套餐模式及名称响应
+	M2AT_SWITCHVSIM_SEND = 749;		//VSIM一键换卡
+	M2AT_SWITCHVSIM_RESP = 750;		//VSIM一键换卡响应
+	M2AT_RELOGIN_SEND = 751;		//重登录GLOCALME业务
+	M2AT_RELOGIN_RESP = 752;		//重登录GLOCALME业务响应
+	M2AT_LOGOUT_SEND = 753;		//退出GLOCALME业务
+	M2AT_LOGOUT_RESP = 754;		//退出GLOCALME业务响应
+	M2AT_GET_QOS_SEND = 755;	//查询QOS限速
+	M2AT_GET_QOS_RESP = 756;	//查询QOS限速响应
+	M2AT_SET_QOS_SEND = 757;	//设置QOS限速
+	M2AT_SET_QOS_RESP = 758;	//设置QOS限速响应
+	M2AT_GET_AGPS_SEND = 759;	//查询软GPS功能
+	M2AT_GET_AGPS_RESP = 760;	//查询软GPS功能响应
+	M2AT_SET_AGPS_SEND = 761;	//设置软GPS功能
+	M2AT_SET_AGPS_RESP = 762;	//设置软GPS功能响应
+	M2AT_GET_BGPS_SEND = 763;	//查询硬GPS功能
+	M2AT_GET_BGPS_RESP = 764;	//查询硬GPS功能响应
+	M2AT_SET_BGPS_SEND = 765;	//设置硬GPS功能
+	M2AT_SET_BGPS_RESP = 766;	//设置硬GPS功能响应
+	M2AT_GET_BGPSINFO_SEND = 767; //查询当前GPS位置信息
+	M2AT_GET_BGPSINFO_RESP = 768; //查询当前GPS位置信息响应
+	M2AT_GET_RUNSTEP_SEND = 769;	//查询GLOCALME当前启动状态
+	M2AT_GET_RUNSTEP_RESP = 770;	//查询GLOCALME当前启动状态响应
+	M2AT_GET_VSIMUP_SEND = 771;		//查询云卡是否开机自启动
+	M2AT_GET_VSIMUP_RESP = 772;		//查询云卡是否开机自启动响应
+	M2AT_SET_VSIMUP_SEND = 773;		//设置云卡是否开机自启动
+	M2AT_SET_VSIMUP_RESP = 774;		//设置云卡是否开机自启动响应
+	M2AT_GET_APN_SEND = 775;		//查询当前APN
+	M2AT_GET_APN_RESP = 776;		//查询当前APN响应
+	M2AT_GET_ATI_SEND = 777;			//查询产品信息
+	M2AT_GET_ATI_RESP = 778;		//查询产品信息响应
+    M2AT_GET_WIFISSID_SEND = 779;	//查询wifi名字
+    M2AT_GET_WIFISSID_RESP = 780;	//查询wifi名字响应
+    M2AT_GET_WIFIPWD_SEND = 781;	//查询wifi密码
+    M2AT_GET_WIFIPWD_RESP = 782;	//查询wifi密码响应
+}
+
+//************************web start **************************/
+//登陆状态
+enum uc_glome_login{
+    LOGIN_INIT = 0;                     //初始状态
+    LOGIN_ING = 1;                      //登录中
+    LOGIN_FAIL = 2;                     //登录失败
+    LOGIN_OK = 3;                       //登录成功
+}
+
+//拨号状态
+enum uc_glome_datacall{
+    LINK_DOWN = 0;                      //未拨上号
+    LINK_UP = 1;                        //拨号OK
+}
+
+//网络制式
+enum uc_radio_tech{
+    RADIO_UNKNOWN = 0;
+    RADIO_GPRS = 1;
+    RADIO_EDGE = 2;
+    RADIO_UMTS = 3;
+    RADIO_IS95A = 4;                    //cdma A
+    RADIO_IS95B = 5;                    //cdma B
+    RADIO_1xRTT = 6;
+    RADIO_EVDO_0 = 7;
+    RADIO_EVDO_A = 8;
+    RADIO_HSDPA = 9;
+    RADIO_HSUPA = 10;
+    RADIO_HSPA = 11;
+    RADIO_EVDO_B = 12;
+    RADIO_EHRPD = 13;
+    RADIO_LTE = 14;
+    RADIO_HSPAP = 15;                   //HSPA+
+    RADIO_GSM = 16;                     //Only supports voice
+    RADIO_TD_SCDMA = 17;
+    RADIO_IWLAN = 18;
+}
+
+//异常Portal类型定义
+enum uc_portal_status{
+    EXP_CONNECTING = 0;                 //0,0  before SOCKET on
+    EXP_COMPLETE = 1;                   //1,0  socket_on 主板 SOCKET建立OK
+    EXP_DEVICE_INACTIVE = 2;            //2,0  UIM FAIL 14 未激活, 未绑定
+    EXP_ACCOUNT_INSUFFICIENT = 3;       //3,0  余额告警或者余额不足
+    EXP_LIMIT_SPEED = 4;                //4,0  S2C_CMD_74
+    EXP_DEVICE_ABNORMAL = 5;            //5,0  设备异常需要收回
+    EXP_NOSUITABLE_NETWORK = 6;         //6,0  无合适的网络覆盖
+    EXP_LOW_POWER = 7;                  //7,0  低电
+    EXP_LOGIN_ABNORMAL = 8;             //8,0  设备登录异常
+    EXP_NETWORK_BUSY = 9;               //9,0  网络繁忙
+    EXP_SYSTEM_BUSY = 10;               //10,0  系统繁忙
+    EXP_DEVICE_UPGRADE = 11;            //11,0  设备升级中
+    EXP_DEVICE_UPGRADE_OK = 12;         //12,0  设备升级完成
+    EXP_SERVICE_NOTICE_ONLYONCE = 13;   //13,0  服务器通知，将服务器下发的通知内容字符串填充到uc_portal_status.more_info，portal state_type=13，more_info_flag=1，其他为portal状态上一次保存的值
+    EXP_SIM_SELECT = 14;                //14,0  SIM卡选择
+    EXP_RSIM_STATE = 15;                //15,0  实体卡状态
+    EXP_INITIAL_ACCOUNT = 16;           //16,0  初始100M账户，需要用户注册
+    EXP_SLEEP_WAKE_UP = 17;             //17,0  卡休眠唤醒
+    EXP_NONE = 18;                      //X,X   -- no case
+}
+
+//流量防护开关
+enum uc_econ_data_usage{
+    ECON_DISABLE = 0;                   //流量防护关闭
+    ECON_ENABLE = 1;                    //流量防护开启
+}
+
+//SIM卡模式
+enum uc_sim_channel{
+    GLOCALME = 0;                   //Cloud SIM
+    SIM1 = 1;                       //实体卡SIM 1
+    SIM2 = 2;                       //实体卡SIM 2
+    SMART = 3;                      //智能选卡
+}
+
+//SIM卡配置模式，0数据通道，1流量交易，2禁用
+enum uc_sim_cfg{
+    DATA_CHANNEL = 0;
+    FLOW_TRADE = 1;
+    DISABLE = 2;
+}
+
+//账户类型
+enum uc_user_type{
+    PERSONAL = 0;                   //个人
+    AGENT_TO_PERSONAL = 1;          //代理转个人
+    AGENT = 2;                      //代理购买套餐
+    RENT = 3;                       //租赁
+}
+
+//APN认证类型
+enum uc_apn_auth_type{
+    NULL = 0;
+    PAP = 1;
+    CHAP = 2;
+    PAP_CHAP = 3;
+}
+
+//APN类型
+enum uc_apn_type{
+    DEFUALT = 0;
+    IA = 1;
+    SUPL = 2;
+}
+
+//APN协议类型
+enum uc_apn_protol_type{
+    IPV4 = 0;
+    IPV6 = 1;
+    IPV4V6 = 2;
+}
+
+//APN漫游协议类型
+enum uc_apn_roam_protol_type{
+    ROAM_IPV4 = 0;
+    ROAM_IPV6 = 1;
+    ROAM_IPV4V6 = 2;
+}
+
+//漫游开关
+enum uc_sim_roam{
+    ROAM_DISABLE = 0;               //漫游关闭
+    ROAM_ENABLE = 1;                //漫游开启
+}
+
+//web请求账户信息的刷新操作
+enum uc_req_refresh_type{
+    INTERVAL = 0;                   //间隔刷新
+    NOW = 1;                        //立即刷新
+}
+
+//web通用消息
+message uc_web_comm_msg{
+    optional int32 ret = 1;
+}
+
+//APN配置参数
+message uc_sim_apn{
+    required string imsi = 1;                       //最大长度15+1字节
+    required string apn = 2;                        //最大长度63+1字节
+    required string apn_username = 3;               //最大长度63+1字节
+    required string apn_passwd = 4;                 //最大长度63+1字节
+    required uc_apn_auth_type apn_auth = 5;         //APN认证类型
+    required uc_apn_type type = 6;                  //APN类型
+}
+
+//设置APN
+message uc_apn_set{
+    required uc_sim_apn apn_sim1 = 1;               //实体卡SIM1的APN
+    optional uc_sim_apn apn_sim2 = 2;               //实体卡SIM2的APN
+}
+
+//配置wifi热点
+message uc_glome_config_wifi {
+    required bool enable = 1;                       //true 打开热点，false 关闭热点
+    required string ssid = 2;                       //热点名称，不能为空
+    required string password = 3;                   //密码，长度大于等于8。
+}
+
+//设备拨号状态信息，ip, dns, 网关，子网掩码
+message uc_glome_datacall_state{
+    required uc_glome_datacall dataCallState = 1;
+    required string ip_type = 2;                    //最大长度15+1字节
+    required string dns = 3;                        //最大长度39+1字节
+    required string ipaddress = 4;                  //最大长度39+1字节
+    required string gateway = 5;                    //最大长度39+1字节
+    required string netmask = 6;                    //最大长度39+1字节
+    required uint32 sleep_status = 7;
+}
+
+//Glocalme异常Portal消息体定义
+message uc_glome_exp_info{
+    required uc_portal_status state_type = 1;    //异常Portal类型
+    required uint32 err_code = 2;                //异常代码
+    required uint32 run_step = 3;                //运行步骤数
+    required uint32 more_info_flag = 4;          //指示more_info有内容时为1，默认无为0
+    required string more_info = 5;               //最大长度199+1字节
+}
+
+//账户流量信息
+message uc_glome_account{
+    required string name = 1;                    //套餐名，最大长度63+1字节
+    required double intflowbyte = 2;             //总共流量
+    required double surplusflowbyte = 3;         //剩余流量
+    required uint64 start_time = 4;              //起始时间
+    required uint64 end_time = 5;                //结束时间(减去当前时间为有效期)
+    required bool isused = 6;                    //1为当前使用套餐，0为当前未用套餐
+}
+
+//当前所在国家有效套餐
+message uc_glome_account_info{
+    required double amount = 1;                  //剩余金额
+    required double rate = 2;                    //多少钱一兆，费率
+    required string country_name = 3;            //套餐属于哪个国家，最大长度60+1字节
+    required uint32 package_num = 4;             //多少个套餐
+    repeated uc_glome_account package = 5;       //每个套餐
+    required uint32 is_show_3g = 6;
+    required uc_user_type user_type = 7;         //0：个人，1：代理转个人，2：代理购买套餐，3：租赁
+    required double accumulated_flow = 8;        //累积使用流量 unit:KByte
+    required string reserved = 9;                //保留字段，最大长度199+1字节
+    required string display_flag = 10;           //套餐信息显示方案，最大长度31+1字节
+    required string cssType = 11;                //最大长度31+1字节
+    required string unit = 12;                   //剩余金额的单位符号，最大长度15+1字节
+}
+
+//SIM卡状态信息
+message uc_glome_sim_user_config{
+    required uc_sim_channel data_channel = 1;    //通道0虚拟卡，实体卡1，实体卡2
+    required uc_sim_cfg sim1_cfg = 2;            //SIM1卡配置模式，0数据通道，1流量交易，2禁用
+    required uc_sim_cfg sim2_cfg = 3;            //SIM2卡配置模式，0数据通道，1流量交易，2禁用
+    required uint32 sim1_exist = 4;              //SIM1卡存在
+    required uint32 sim2_exist = 5;              //SIM2卡存在
+    required string imsi1 = 6;                   //如有PIN码将获取不到IMSI，最大长度15+1字节
+    required string imsi2 = 7;                   //最大长度15+1字节
+    required bool pin1 = 8;                      //SIM1有pin码为1，默认无为0
+    required bool pin2 = 9;                      //SIM2有pin码为1，默认无为0
+    required bool new_insert1 = 10;              //SIM1为新插入的卡
+    required bool new_insert2 = 11;              //SIM2为新插入的卡
+    required bool puk1 = 12;                     //SIM1有puk码为1，默认无为0
+    required bool puk2 = 13;                     //SIM2有puk码为1，默认无为0
+}
+
+//运营商信息
+message uc_glome_operator_info{
+    required string net_operator = 1;            //最大长度31+1字节
+}
+
+//服务器下发的白名单模式配置参数
+message uc_glome_s2c_uwl_params{
+    required uint32 uwl_mode = 1;                // 网络访问白名单模式，0关闭，1开启
+    required uint32 uwl_live_time = 2;           // 网络访问白名单模式有效时间，单位为分钟
+    required uint32 uwl_interval = 3;            // 正常上网期间定时进入网络访问白名单模式时间，单位为分钟
+    required string uwl_def_url = 4;             // 网络访问白名单模式下portal默认跳转URL，最大长度119+1字节
+}
+
+//上报给广告服务器的终端参数
+message uc_glome_advert_params{
+    required string usercode = 1;                 //最大长度127+1字节
+    required double longitude = 2;                //GPS经度，小数点后6位
+    required double latitude = 3;                 //GPS纬度，小数点后6位
+    required uint32 mcc = 4;
+    required uint32 mnc = 5;
+    required uint32 lac = 6;
+    required uint32 cellid = 7;
+}
+
+//WiFi上下线事件
+message uc_glome_wifi_client_up_down_event{
+    required bytes data = 1;                    //最大长度15+1字节，7字节数据，0:[1为上线，2为下线]1-6[mac地址十六进制]
+}
+
+//服务器下发的广告模式配置参数
+message uc_glome_s2c_advert_params{
+    required uint32 package_mode = 1;                                 // 套餐优惠模式，0无优惠，1支付宝广告
+    required uint32 advert_interval = 2;                              // 广告间隔时间，单位为分钟
+    required uint32 advert_auto_ignore_interval = 3;                  // 自动放行网络时间，单位为秒
+    required uint32 advert_temp_allow_interval = 4;                   // 临时放行网络时间，单位为分钟
+    required uc_glome_s2c_uwl_params s2c_uwl_params = 5;
+}
+
+//实体SIM卡漫游状态
+message uc_rsim_roam{
+    required uc_sim_roam roam_sim1 = 1;                               //实体卡SIM1的漫游状态
+    required uc_sim_roam roam_sim2 = 2;                               //实体卡SIM2的漫游状态
+}
+//******************* web end ***************************/
+
+
+//******************* led start*******************************/
+enum led_abnormal_type{
+    LED_ABNORMAL_NONE = 0;
+    LED_ABNORMAL_NO_ACCOUNT = 1;
+    LED_ABNORMAL_NO_FLOW = 2;
+    LED_ABNORMAL_ACCOUNT_FREEZE = 3;
+    LED_ABNORMAL_ACCOUNT_ERROR = 4;
+    LED_ABNORMAL_LOCAL_SIM_INSERT = 5;
+}
+
+message uc_led_abnormal{
+    required uint32 is_abnormal = 1;
+    required led_abnormal_type abnormal_type = 2;
+}
+
+message uc_led_comm_msg{
+    optional int32 ret = 1;
+}
+
+message uc_led_datacall{
+    required uint32 datacall_status = 1;
+    optional string ip_type = 2;
+    optional string dns = 3;
+    optional string ipaddress = 4;
+    optional string gateway = 5;
+    optional string netmask = 6;
+}
+
+message uc_led_net_type{
+    required uc_radio_tech radio_tech = 1;
+}
+
+message uc_led_signal{
+    required int32 mGsmSignalStrength = 1;
+    required int32 mGsmBitErrorRate = 2;
+    required int32 mCdmaDbm = 3;
+    required int32 mCdmaEcio = 4;
+    required int32 mEvdoDbm = 5;
+    required int32 mEvdoEcio = 6;
+    required int32 mEvdoSnr = 7;
+    required int32 mLteSignalStrength = 8;
+    required int32 mLteRsrp = 9;
+    required int32 mLteRsrq = 10;
+    required int32 mLteRssnr = 11;
+    required int32 mLteCqi = 12;
+    required int32 mTdScdmaRscp = 13;
+}
+
+message uc_led_key_mask{
+    required bool enable = 1;
+}
+
+message uc_cloud_signal_strength_level{
+	required uint32 level = 1;
+}
+
+//**************************led end *********************/
+
+//**************************gps start *********************/
+enum uc_gps_switch_state
+{
+	NONE = 0;     //未开启定位
+	NETWORK = 1;  //网络定位
+	SATELLITE = 2;  //卫星定位
+	ALL = 3;       //网络定位和卫星定位
+}
+
+//获取GPS状态
+message uc_gps_state_get
+{
+	required uc_gps_switch_state gps_switch_state = 1;
+}
+
+//设置GPS状态
+message uc_gps_state_set
+{
+	required uc_gps_switch_state gps_switch_state = 1;
+}
+
+//获取GPS状态的回复
+message uc_gps_state_set_rsp
+{
+	required uint32 result = 1;
+	required uint32 errorCode = 2;
+}
+
+//上传GPS位置信息
+message uc_gps_upload_position
+{
+    required double longitude = 2;                //GPS经度，小数点后6位
+    required double latitude = 3;                 //GPS纬度，小数点后6位
+}
+//**************************gps end   *********************/
+
+//**************************fata start   *********************/
+//通知led和uservice fota升级开始
+message uc_fota_update_start
+{
+    optional bool isStart = 1;                //true 开始升级
+}
+//**************************fata end   *********************/
+
+
+
+//**************************m2at start   *********************/
+//模块当前的工作模式
+enum m2at_work_mode{
+    vsim = 0;	//工作在虚拟VSIM卡模式
+    sim = 1;	//实体卡
+    unknow = 2;	//未知
+}
+message m2at_get_gmode_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_gmode_resp
+{
+	required m2at_work_mode work_mode = 1;
+	required string result = 2; //ok,error
+}
+message m2at_set_gmode_send
+{
+	optional string cmd = 1;
+	required m2at_work_mode work_mode = 2;
+}
+message m2at_set_gmode_resp
+{
+	required string result = 1;
+}
+
+//设置wiif名称和密码
+message m2at_set_wifi_send
+{
+	optional string cmd = 1;
+	optional string ssid = 2;
+	optional string passwd = 3;
+}
+message m2at_set_wifi_resp
+{
+	required string result = 1;
+}
+
+//查询、设置工厂模式
+//模块当前的工作模式
+enum m2at_ucftm{
+    normal = 0;	//当前为普通模式
+    facmode = 1;	//当前为工厂模式
+}
+
+message m2at_get_ucftm_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_ucftm_resp
+{
+	required m2at_ucftm ft_mode = 1;
+	required string result = 2;
+}
+message m2at_set_ucftm_send
+{
+	optional string cmd = 1;
+	required m2at_ucftm ft_mode = 2;
+}
+message m2at_set_ucftm_resp
+{
+	required string result = 1;
+}
+
+//设置种子卡通道的IMEI
+message m2at_set_imeiwr_send
+{
+	optional string cmd = 1;
+	required string imei = 2;
+}
+message m2at_set_imeiwr_resp
+{
+	required string result = 1;
+}
+
+//查询、设置当前APN
+
+message m2at_get_apn_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_apn_resp
+{
+	required string apn = 1;
+	required string authmode = 2;//0:PDP_AUTH_NONE;1:PDP_AUTH_PAP;2:PDP_AUTH_CHAP
+	required string user = 3;
+	required string passwd = 4;
+	required string result = 5;
+}
+message m2at_set_apn_send
+{
+	optional string cmd = 1;
+	required string apn = 2;
+	required string authmode = 3;//0:PDP_AUTH_NONE;1:PDP_AUTH_PAP;2:PDP_AUTH_CHAP
+	required string user = 4;
+	required string passwd = 5;
+}
+message m2at_set_apn_resp
+{
+	required string result = 1;
+}
+
+//查询、设置当前漫游开关
+enum m2at_roam_type{
+    disable = 0;	//禁止漫游
+    enable = 1;	//允许漫游
+}
+message m2at_get_roamkey_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_roamkey_resp
+{
+	required m2at_roam_type roam_staus = 1;
+	required string result = 2;
+}
+message m2at_set_roamkey_send
+{
+	optional string cmd = 1;
+	required m2at_roam_type roam_staus = 2;
+}
+message m2at_set_roamkey_resp
+{
+	required string result = 1;
+}
+//恢复出厂设置
+message m2at_restore_send
+{
+	optional string cmd = 1;
+}
+message m2at_restore_resp
+{
+	required string result = 1;
+}
+
+//上传log及ip 设置
+message m2at_logmode_send
+{
+	optional string cmd = 1;
+	required int32 sim_sel = 2;//0:通过vsim上传log,1:通过种子卡上传
+	required int32 log_type = 3;//0:uclog,1:qxlog,2:wifi log,3:kmsg log
+	required string ip = 4; //ftp 服务器地址
+}
+message m2at_logmode_resp
+{
+	required string result = 1;
+}
+
+//查询wifi热点接入人数
+
+message m2at_get_wificlient_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_wificlient_resp
+{
+	required int32 cli_num = 1;
+	required string result = 2;
+}
+
+//查询wifi热点接入客户端名称
+message m2at_get_wifiname_send
+{
+	optional string cmd = 1;
+	required int32 cli_index = 2;
+}
+message m2at_get_wifiname_resp
+{
+	required string cli_name = 1;
+	required string result = 2;
+}
+
+//查询wifi热点接入客户端IP
+message m2at_get_wifiip_send
+{
+	optional string cmd = 1;
+	required int32 cli_index = 2;
+}
+message m2at_get_wifiip_resp
+{
+	required string cli_ip = 1;
+	required string result = 2;
+}
+//打开、关闭wifi热点功能
+
+message m2at_set_wifiap_send
+{
+	optional string cmd = 1;
+	required int32 wifiap_enable = 2; //0:关闭wifi热点功能；1：打开wifi热点功能
+}
+message m2at_set_wifiap_resp
+{
+	required string result = 1;
+}
+//查询流量防护开关
+message m2at_get_ucff_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_ucff_resp
+{
+	required int32 ucff_mode = 1; //0:关闭；1：打开
+	required string result = 2;
+}
+//设置流量防护开关
+message m2at_set_ucff_send
+{
+	optional string cmd = 1;
+	required int32 ucff_mode = 2; //0:关闭；1：打开
+}
+message m2at_set_ucff_resp
+{
+	required string result = 1;
+}
+
+//查询GLOCALME业务登录模式
+message m2at_get_loginmode_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_loginmode_resp
+{
+	required int32 loginmode = 1;//0:绑定登录；1：用户密码登录
+	required string result = 2;
+}
+//设置GLOCALME业务登录模式
+message m2at_set_loginmode_send
+{
+	optional string cmd = 1;
+	required int32 loginmode = 2; //0:绑定登录；1：用户密码登录
+}
+message m2at_set_loginmode_resp
+{
+	required string result = 1;
+}
+//查询GLOCALME业务接入IP地址
+message m2at_get_loginip_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_loginip_resp
+{
+	required string loginip = 1;//接入ip,可能不止一个例如xx.xx.xx.xx;xx.xx.xx.xx
+	required string result = 2;
+}
+//设置GLOCALME业务接入IP地址
+message m2at_set_loginip_send
+{
+	optional string cmd = 1;
+	required string loginip = 2; //接入ip
+	required int32 loginip_index = 3;//代表第几个登陆IP地址，最大为5
+}
+message m2at_set_loginip_resp
+{
+	required string result = 1;
+}
+//查询GLOCALME业务账号用户名和密码
+message m2at_get_account_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_account_resp
+{
+	required string username = 1;
+	required string passwd = 2;
+	required string result = 3;
+}
+//设置GLOCALME业务账号用户名和密码
+message m2at_set_account_send
+{
+	optional string cmd = 1;
+	required string username = 2;
+	required string passwd = 3;
+}
+message m2at_set_account_resp
+{
+	required string result = 1;
+}
+//查询当前GLOCALME业务套餐模式及名称
+message m2at_get_pkg_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_pkg_resp
+{
+	optional string amount = 1;//金额
+	optional string rate = 2;//汇率
+	optional string mcc = 3;//国家
+	optional string pakagename = 4;//套餐名
+	optional string intflow = 5;//总流量
+	optional string surplusflow = 6;//剩余流量
+	optional string activetime = 7;//起始时间
+	optional string expiretime = 8;//结束时间
+	required string result = 9;
+}
+
+//VSIM一键换卡
+message m2at_switchvsim_send
+{
+	optional string cmd = 1;
+}
+message m2at_switchvsim_resp
+{
+	required string result = 1;
+}
+//重登录GLOCALME业务
+message m2at_relogin_send
+{
+	optional string cmd = 1;
+}
+message m2at_relogin_resp
+{
+	required string result = 1;
+}
+//退出GLOCALME业务
+message m2at_logout_send
+{
+	optional string cmd = 1;
+}
+message m2at_logout_resp
+{
+	required string result = 1;
+}
+//查询QOS限速
+message m2at_get_qos_send
+{
+	optional string cmd = 1;
+    required string network = 2;
+}
+message m2at_get_qos_resp
+{
+	required string result = 1;
+	required int32 wifi_usb_speed = 2;//wifi and usb down load,bps,0: not limit speed
+	required int32 vsim_speed = 3;//vsim upload,bps,0: not limit speed
+}
+//设置
+message m2at_set_qos_send
+{
+	optional string cmd = 1;
+    required string network = 2;
+	required int32 wifi_usb_speed = 3;//wifi and usb down load,bps,0: not limit speed
+	required int32 vsim_speed = 4;//vsim upload,bps,0: not limit speed
+}
+message m2at_set_qos_resp
+{
+	required string result = 1;
+}
+//查询、设置软GPS功能
+message m2at_get_agps_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_agps_resp
+{
+	required int32 agps_enable = 1;//0:关闭；1:开启
+	required string result = 2;
+}
+
+message m2at_set_agps_send
+{
+	optional string cmd = 1;
+	required int32 agps_enable = 2;//0:关闭；1:开启
+}
+message m2at_set_agps_resp
+{
+	required string result = 1;
+}
+//查询、设置硬GPS功能
+message m2at_get_bgps_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_bgps_resp
+{
+	required int32 bgps_enable = 1;//0:关闭；1:开启
+	required string result = 2;
+}
+message m2at_set_bgps_send
+{
+	optional string cmd = 1;
+	required int32 bgps_enable = 2;//0:关闭；1:开启
+}
+message m2at_set_bgps_resp
+{
+	required string result = 1;
+}
+//查询当前GPS位置信息
+message m2at_get_bgpsinfo_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_bgpsinfo_resp
+{
+	required string Latitude = 1; //经度
+	required string longitude = 2;//纬度
+	required string result = 3;
+}
+//查询GLOCALME当前启动状态
+message m2at_get_runstep_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_runstep_resp
+{
+	required string step = 1;//启动百分比
+	required string result = 2;
+}
+//查询、设置云卡是否开机自启动
+message m2at_get_vsimup_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_vsimup_resp
+{
+	required int32 up_enable = 1;//0:开机启动，1:开机不启动
+	required string result = 2;
+}
+message m2at_set_vsimup_send
+{
+	optional string cmd = 1;
+	required int32 up_enable = 2;//0:开机启动，1:开机不启动
+}
+message m2at_set_vsimup_resp
+{
+	required string result = 1;
+}
+//查询产品信息
+message m2at_get_ati_send
+{
+	optional string cmd = 1;
+}
+message m2at_get_ati_resp
+{
+	required string result = 1;
+}
+//查询wifi名字
+message m2at_get_wifissid_send
+{
+    optional string cmd = 1;
+}
+message m2at_get_wifissid_resp
+{
+    required string	ssid = 1;
+    required string result = 2;
+}
+//查询wifi密码
+message m2at_get_wifipwd_send
+{
+    optional string cmd = 1;
+}
+message m2at_get_wifipwd_resp
+{
+    required string	pwd = 1;
+    required string result = 2;
+}
+//**************************m2at end   *********************/
+
+
+//web与APP之间交互的数据部分定义
+message uc_msg_api{
+    required uc_msg_id_e msg_id = 1;
+    required uint32 token = 2;
+
+    //********************web请求消息ID(100~199) start**********************/
+    optional uc_req_refresh_type req_action = 100;                     //请求账户信息
+    optional uc_web_comm_msg req_login = 101;                          //登陆请求，无请求内容，不需响应
+    optional uc_web_comm_msg req_logout = 102;                         //退登陆，无请求内容，不需响应
+    optional uc_econ_data_usage econ_data_usage = 103;                 //设置流量防护
+    optional uc_sim_channel sim_channel = 104;                         //设置SIM卡通道
+    optional uc_apn_set apn_set = 105;                                 //设置APN
+    optional uc_web_comm_msg req_reset_factory = 106;                  //恢复出厂设置，无请求内容，主要是控制led灯的闪烁，不需响应
+    optional uc_web_comm_msg req_upgrade_start = 107;                  //升级开始，无请求内容，主要是控制led灯的闪烁，不需响应
+    optional uc_web_comm_msg req_upgrade_over = 108;                   //升级结束，无请求内容，主要是控制led灯的闪烁，不需响应
+    optional uc_sim_roam roam_set = 109;                               //设置漫游
+    optional uc_web_comm_msg req_advert_params = 110;                  //请求设备相关信息，拉取特定广告，无请求内容，响应内容为uc_glome_advert_params
+    optional uc_web_comm_msg req_sleep_wake_up = 111;                  //登陆请求，无请求内容，不需响应
+    optional uc_glome_config_wifi config_wifi = 112;                   //配置wifi热点
+    optional uc_web_comm_msg req_econ_data_usage_status = 113;         //请求节省流量开关的状态值，0为关闭/1为开启
+    //*********************web请求消息ID(100~199) end**********************/
+
+    //*************Glocalme状态消息ID(200~299)，主动上报方式 start*********/
+    optional uc_glome_login login_status = 200;                        //登陆状态
+    optional uc_glome_datacall_state datacall_status = 201;            //设备拨号状态信息，ip, dns, 网关，子网掩码
+    optional uc_radio_tech radio_tech = 202;                           //网络制式
+    optional uc_glome_account_info account_info = 203;                 //账户信息
+    optional uc_glome_exp_info exception_info = 204;                   //Glocalme异常Portal消息
+    optional uc_glome_sim_user_config sim_config_status = 205;         //SIM卡状态信息
+    optional uc_glome_operator_info operator_info = 206;               //运营商信息
+    optional uc_rsim_roam rsim_roam = 207;                             //实体SIM卡漫游状态
+    optional uc_glome_advert_params advert_params = 208;               //上报给广告服务器的终端参数
+    optional uc_glome_wifi_client_up_down_event up_down_event = 209;   //WiFi上下线事件
+    optional uc_glome_s2c_advert_params s2c_advert_params = 210;       //服务器下发的广告模式配置参数
+    optional uc_econ_data_usage rsp_econ_data_usage_status = 211;      //节省流量开关的状态值，响应内容为uc_econ_data_usage
+    //**************Glocalme状态消息ID(200~299)，主动上报方式 end**********/
+
+
+
+    //****led start*****/
+    optional uc_led_abnormal led_abnormal = 300;
+    optional uc_led_comm_msg led_abnormal_query = 301;
+    optional uc_led_datacall led_data_call = 302;
+    optional uc_led_net_type led_net_type = 303;
+    optional uc_led_signal   led_signal_info = 304;
+    optional uc_led_comm_msg led_poweroff_req = 305;
+    optional uc_led_comm_msg led_poweroff_rsp = 306;
+    optional uc_led_comm_msg led_service_start = 307;
+    optional uc_led_comm_msg led_reset_factory_start = 308;            // 其他场景恢复出厂设置
+    optional uc_led_comm_msg led_reset_factory_over = 309;
+    optional uc_led_comm_msg led_upgrade_start = 310;
+    optional uc_led_comm_msg led_upgrade_over = 311;
+    optional uc_led_comm_msg led_mmi_test = 312;
+    optional uc_led_key_mask led_key_mask = 313;
+    optional uc_led_key_mask led_key_mask_state_query = 314;
+    optional uc_led_key_mask led_key_mask_state_rsp = 315;
+    optional uc_led_comm_msg led_reset_key_event = 316;
+    optional uc_led_comm_msg led_ftm_mode_set = 317;
+    optional uc_led_comm_msg led_wifi_status = 318;
+    optional uc_led_comm_msg led_local_reset_fact_start = 319;         // 按键恢复出厂设置
+    optional uc_led_comm_msg led_local_reset_fact_succ = 320;
+    optional uc_led_comm_msg led_local_reset_fact_fail = 321;
+    optional uc_led_comm_msg led_poweroff_modem_rf_event = 322;
+    //****led end*****/
+
+	// common
+	optional uc_cloud_signal_strength_level cloud_signal_level = 401;
+
+	//gps
+	optional uc_gps_state_get gps_state_get = 501;
+	optional uc_gps_state_set gps_state_set = 502;
+	optional uc_gps_state_set_rsp gps_state_set_rsp = 503;
+	optional uc_gps_upload_position gps_upload_position = 504;
+
+	//fota
+	optional uc_fota_update_start fota_update_start = 601;
+	//**************************m2at start   *********************/
+
+	optional m2at_get_gmode_send      at_get_gmode_send = 701;
+	optional m2at_get_gmode_resp      at_get_gmode_resp = 702;
+	optional m2at_set_gmode_send      at_set_gmode_send = 703;
+	optional m2at_set_gmode_resp      at_set_gmode_resp = 704;
+	optional m2at_set_wifi_send       at_set_wifi_send = 705;
+	optional m2at_set_wifi_resp       at_set_wifi_resp = 706;
+	optional m2at_get_ucftm_send      at_get_ucftm_send = 707;
+	optional m2at_get_ucftm_resp      at_get_ucftm_resp = 708;
+	optional m2at_set_ucftm_send      at_set_ucftm_send = 709;
+	optional m2at_set_ucftm_resp      at_set_ucftm_resp = 710;
+	optional m2at_set_imeiwr_send     at_set_imeiwr_send = 711;
+	optional m2at_set_imeiwr_resp     at_set_imeiwr_resp = 712;
+	optional m2at_set_apn_send        at_set_apn_send = 713;
+	optional m2at_set_apn_resp        at_set_apn_resp = 714;
+	optional m2at_get_roamkey_send    at_get_roamkey_send = 715;
+	optional m2at_get_roamkey_resp    at_get_roamkey_resp = 716;
+	optional m2at_set_roamkey_send    at_set_roamkey_send = 717;
+	optional m2at_set_roamkey_resp    at_set_roamkey_resp = 718;
+	optional m2at_restore_send        at_restore_send = 719;
+	optional m2at_restore_resp        at_restore_resp = 720;
+	optional m2at_logmode_send        at_logmode_send = 721;
+	optional m2at_logmode_resp        at_logmode_resp = 722;
+	optional m2at_get_wificlient_send at_get_wificlient_send = 723;
+	optional m2at_get_wificlient_resp at_get_wificlient_resp = 724;
+	optional m2at_get_wifiname_send   at_get_wifiname_send = 725;
+	optional m2at_get_wifiname_resp   at_get_wifiname_resp = 726;
+	optional m2at_get_wifiip_send     at_get_wifiip_send = 727;
+	optional m2at_get_wifiip_resp     at_get_wifiip_resp = 728;
+	optional m2at_set_wifiap_send     at_set_wifiap_send = 729;
+	optional m2at_set_wifiap_resp     at_set_wifiap_resp = 730;
+	optional m2at_get_ucff_send       at_get_ucff_send = 731;
+	optional m2at_get_ucff_resp       at_get_ucff_resp = 732;
+	optional m2at_set_ucff_send       at_set_ucff_send = 733;
+	optional m2at_set_ucff_resp       at_set_ucff_resp = 734;
+	optional m2at_get_loginmode_send  at_get_loginmode_send = 735;
+	optional m2at_get_loginmode_resp  at_get_loginmode_resp = 736;
+	optional m2at_set_loginmode_send  at_set_loginmode_send = 737;
+	optional m2at_set_loginmode_resp  at_set_loginmode_resp = 738;
+	optional m2at_get_loginip_send    at_get_loginip_send = 739;
+	optional m2at_get_loginip_resp    at_get_loginip_resp = 740;
+	optional m2at_set_loginip_send    at_set_loginip_send = 741;
+	optional m2at_set_loginip_resp    at_set_loginip_resp = 742;
+	optional m2at_get_account_send    at_get_account_send = 743;
+	optional m2at_get_account_resp    at_get_account_resp = 744;
+	optional m2at_set_account_send    at_set_account_send = 745;
+	optional m2at_set_account_resp    at_set_account_resp = 746;
+	optional m2at_get_pkg_send        at_get_pkg_send = 747;
+	optional m2at_get_pkg_resp        at_get_pkg_resp = 748;
+	optional m2at_switchvsim_send     at_switchvsim_send = 749;
+	optional m2at_switchvsim_resp     at_switchvsim_resp = 750;
+	optional m2at_relogin_send        at_relogin_send = 751;
+	optional m2at_relogin_resp        at_relogin_resp = 752;
+	optional m2at_logout_send         at_logout_send = 753;
+	optional m2at_logout_resp         at_logout_resp = 754;
+	optional m2at_get_qos_send        at_get_qos_send = 755;
+	optional m2at_get_qos_resp        at_get_qos_resp = 756;
+	optional m2at_set_qos_send        at_set_qos_send = 757;
+	optional m2at_set_qos_resp        at_set_qos_resp = 758;
+	optional m2at_get_agps_send       at_get_agps_send = 759;
+	optional m2at_get_agps_resp       at_get_agps_resp = 760;
+	optional m2at_set_agps_send       at_set_agps_send = 761;
+	optional m2at_set_agps_resp       at_set_agps_resp = 762;
+	optional m2at_get_bgps_send       at_get_bgps_send = 763;
+	optional m2at_get_bgps_resp       at_get_bgps_resp = 764;
+	optional m2at_set_bgps_send       at_set_bgps_send = 765;
+	optional m2at_set_bgps_resp       at_set_bgps_resp = 766;
+	optional m2at_get_bgpsinfo_send   at_get_bgpsinfo_send = 767;
+	optional m2at_get_bgpsinfo_resp   at_get_bgpsinfo_resp = 768;
+	optional m2at_get_runstep_send    at_get_runstep_send = 769;
+	optional m2at_get_runstep_resp    at_get_runstep_resp = 770;
+	optional m2at_get_vsimup_send     at_get_vsimup_send = 771;
+	optional m2at_get_vsimup_resp     at_get_vsimup_resp = 772;
+	optional m2at_set_vsimup_send     at_set_vsimup_send = 773;
+	optional m2at_set_vsimup_resp     at_set_vsimup_resp = 774;
+	optional m2at_get_apn_send        at_get_apn_send = 775;
+	optional m2at_get_apn_resp        at_get_apn_resp = 776;
+	optional m2at_get_ati_send		  at_get_ati_send = 777;
+	optional m2at_get_ati_resp		  at_get_ati_resp = 778;
+    optional m2at_get_wifissid_send	  at_get_wifissid_send = 779;
+    optional m2at_get_wifissid_resp   at_get_wifissid_resp = 780;
+    optional m2at_get_wifipwd_send    at_get_wifipwd_send = 781;
+    optional m2at_get_wifipwd_resp    at_get_wifipwd_resp = 782;
+	//**************************m2at end   *********************/
+}
+

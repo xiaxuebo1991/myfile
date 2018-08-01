@@ -1,0 +1,115 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ucloudlink.safety4fw"
+          android:sharedUserId="android.uid.phone">
+
+    /////////////////////////////////////////////////////////////////
+    <!-- permission copy from framework   begin  -->
+    <!--<uses-permission android:name="android.permission.READ_PROFILE" />-->
+    <uses-permission android:name="com.qualcomm.permission.USE_QCRIL_MSG_TUNNEL" />
+    <uses-permission android:name="com.qualcomm.permission.UIM_REMOTE_CLIENT"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.DEVICE_POWER"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.MASTER_CLEAR" />
+    <!-- permission copy from framework   end  -->
+    /////////////////////////////////////////////////////////////////
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true">
+
+        /////////////////////////////////////////////////////////////////
+        <!-- regist copy from framework begin -->
+        <!--<uses-library-->
+            <!--android:name="com.qualcomm.qcrilhook"-->
+            <!--android:required="true" />-->
+        <uses-library
+            android:name="com.qualcomm.qcrilhook"
+            android:required="false"/>
+        <service android:name="com.ucloudlink.framework.remoteuim.UimRemoteClientService"/>
+        <service
+            android:name="com.ucloudlink.refact.access.ui.AccessEntryService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.ucloudlink.cloudsim.framework.service" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+        <service android:name="com.ucloudlink.refact.access.ui.AccessEntryService$GrayInnerService"/>
+        <service android:name="com.ucloudlink.refact.business.keepalive.AccessEntryJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver
+            android:name="com.ucloudlink.refact.channel.monitors.AirplaneModeMonitor"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.AIRPLANE_MODE" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ucloudlink.refact.channel.monitors.WifiReceiver2"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.wifi.STATE_CHANGE"/>
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ucloudlink.refact.channel.monitors.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ucloudlink.refact.channel.monitors.SpnNameReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="ukelink.spn.name"/>
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ucloudlink.refact.channel.monitors.ShutdownReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_SHUTDOWN"/>
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ucloudlink.refact.channel.monitors.ConnectFailReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DATA_CONNECTION_FAILED"/>
+                <action android:name="com.ucloudlink.attach.reject.cause"/>
+            </intent-filter>
+        </receiver>
+        <!--<service-->
+            <!--android:name="com.ucloudlink.refact.business.smartcloud.QueryNetService"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="true">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.ucloudlink.refact.business.smartcloud.QueryNetService"/>-->
+            <!--</intent-filter>-->
+        <!--</service>-->
+        <!-- regist copy from framework end -->
+        /////////////////////////////////////////////////////////////////
+
+
+    </application>
+
+</manifest>
